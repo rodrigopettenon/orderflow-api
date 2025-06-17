@@ -1,0 +1,285 @@
+package com.rodrigopettenon.cadastro_e_consulta.repositories;
+
+import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductDto;
+import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductPageDto;
+import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import org.springframework.stereotype.Repository;
+
+import java.sql.Date;
+import java.util.*;
+
+import static com.rodrigopettenon.cadastro_e_consulta.utils.LogUtil.*;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+@Repository
+public class ProductRepository {
+
+    @PersistenceContext
+    private EntityManager em;
+
+    public void saveProduct(ProductDto productDto) {
+        try{
+            UUID id = UUID.randomUUID();
+
+            StringBuilder sql = new StringBuilder();
+            sql.append(" INSERT INTO tb_products (id, name, sku, price, expiration_date) ");
+            sql.append(" VALUES (:id ,:name, :sku, :price, :expiration) ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("id", id.toString())
+                    .setParameter("name", productDto.getName())
+                    .setParameter("sku", productDto.getSku())
+                    .setParameter("price", productDto.getPrice())
+                    .setParameter("expiration", productDto.getExpiration());
+
+            query.executeUpdate();
+        } catch (Exception e) {
+            logUnexpectedErrorOnSaveClientWithSku(productDto.getSku(), e);
+            throw new ClientErrorException("Erro ao cadastrar um novo produto. ");
+        }
+    }
+
+    public Boolean existsBySku(String sku) {
+        try{
+            String sql = " SELECT 1 FROM tb_products WHERE sku = :sku LIMIT 1 ";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("sku", sku);
+
+            List<?> result = query.getResultList(); //Criando uma lista que receberá itens do tipo '?' ela receberá o resultado da query.
+
+            return !result.isEmpty(); // Se o objeto pesquisado pela query existir retornará true, caso contrário retornará false.
+
+        } catch (Exception e) {
+            logUnexpectedErrorCheckingProductExistenceBySku(sku, e);
+            throw new ClientErrorException("Erro ao verificar existência do SKU.");
+        }
+    }
+
+    public List<ProductDto> findAllProducts(Integer page, Integer linesPerPage, String direction, String orderBy) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT name, sku, price, expiration_date FROM tb_products ");
+            sql.append(" ORDER BY " + orderBy + " " + direction + " ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", linesPerPage)
+                    .setParameter("offset", page * linesPerPage);
+
+            List<Object[]> results = query.getResultList();
+            List<ProductDto> products =  new ArrayList<>();
+
+            for (Object[] result: results) {
+                ProductDto productDto = new ProductDto();
+                productDto.setName((String) result[0]);
+                productDto.setSku((String) result[1]);
+                productDto.setPrice(((Number) result[2]).doubleValue());
+                productDto.setExpiration(((Date) result[3]).toLocalDate());
+
+                products.add(productDto);
+            }
+
+            return products;
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar todos produtos.");
+        }
+
+    }
+
+    public ProductDto findBySku(String sku) {
+        try{
+            String sql = " SELECT id, name, sku, price, expiration_date FROM tb_products WHERE sku = :sku";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("sku", sku);
+
+            List<Object[]> resultList = query.getResultList();
+
+            if(resultList.isEmpty()) {
+                throw new ClientErrorException("Produto não encontrado pelo SKU.");
+            }
+            Object[] result = resultList.getFirst();
+            ProductDto productDtoFound = new ProductDto();
+            productDtoFound.setId(UUID.fromString((String) result[0]));
+            productDtoFound.setName((String) result[1]);
+            productDtoFound.setSku((String) result[2]);
+            productDtoFound.setPrice((Double) result[3]);
+            productDtoFound.setExpiration(((Date) result[4]).toLocalDate());
+
+            logFoundProductBySkuSuccessfully(sku);
+            return productDtoFound;
+        } catch (Exception e) {
+            logUnexpectedErrorOnFindProductBySku(sku, e);
+            throw new ClientErrorException("Erro ao buscar produto pelo SKU.");
+        }
+
+    }
+
+    public ProductDto updateBySku(String sku, ProductDto productDto) {
+        try{
+            StringBuilder sql = new StringBuilder();
+            sql.append(" UPDATE tb_products SET name = :name, price = :price, expiration_date = :expiration ");
+            sql.append(" WHERE sku = :sku ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("name", productDto.getName())
+                    .setParameter("price", productDto.getPrice())
+                    .setParameter("expiration", productDto.getExpiration())
+                    .setParameter("sku", sku);
+
+            query.executeUpdate();
+
+            logProductUpdatedBySkuSuccessfully(sku);
+            return productDto;
+        } catch (Exception e) {
+            logUnexpectedErrorOnUpdateProductBySku(sku, e);
+            throw new ClientErrorException("Erro ao realizar atualização no produto pelo SKU.");
+        }
+
+
+    }
+
+    public void deleteBySku(String sku) {
+        try{
+            String sql = " DELETE FROM tb_products WHERE sku = :sku LIMIT 1 ";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("sku", sku);
+
+            query.executeUpdate();
+        } catch (Exception e) {
+            logUnexpectedErrorOnUpdateProductBySku(sku, e);
+            throw new ClientErrorException("Erro ao realizar deleção do produto pela SKU.");
+        }
+
+    }
+
+    public Long countAllProducts() {
+        try{
+            String sql = " SELECT COUNT(*) FROM tb_products ";
+
+            Query query = em.createNativeQuery(sql);
+
+            Object result = query.getSingleResult();
+            Number total = (Number) result;
+
+            return total.longValue();
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao contar todos produtos.");
+        }
+    }
+
+    public ProductPageDto findFilteredProducts(String name, String sku, Double minPrice,
+                                                 Double maxPrice, Integer page, Integer linesPerPage,
+                                                 String fixedDirection, String fixedOrderBy) {
+
+        try{
+            Map<String, Object> parameters = new HashMap<>();
+
+            StringBuilder sqlProducts = new StringBuilder();
+            sqlProducts.append(" SELECT name, sku, price, expiration_date FROM tb_products WHERE 1=1 ");
+
+
+            if (!isBlank(name)) {
+                sqlProducts.append(" AND name LIKE :name ");
+                parameters.put("name", "%" + name + "%");
+            }
+            if (!isBlank(sku)) {
+                sqlProducts.append(" AND sku = :sku ");
+                parameters.put("sku", sku);
+            }
+            if (!isNull(minPrice)) {
+                sqlProducts.append(" AND price > :minPrice ");
+                parameters.put("minPrice", minPrice);
+            }
+            if (!isNull(maxPrice)) {
+                sqlProducts.append(" AND price < :maxPrice ");
+                parameters.put("maxPrice", maxPrice);
+            }
+
+            sqlProducts.append(" ORDER BY " + fixedOrderBy + " " + fixedDirection + " ");
+            sqlProducts.append(" LIMIT :limit OFFSET :offset ");
+
+            Query queryProducts = em.createNativeQuery(sqlProducts.toString())
+                    .setParameter("limit", linesPerPage)
+                    .setParameter("offset", page * linesPerPage);
+
+            StringBuilder sqlCount = countFilteredProducts(name, sku, minPrice, maxPrice);
+
+            Query queryCount = em.createNativeQuery(sqlCount.toString());
+
+            setQueryParameters(queryProducts, parameters);
+            setQueryParameters(queryCount, parameters);
+
+            Object countResult = queryCount.getSingleResult();
+            Number total = (Number) countResult;
+
+
+            List<Object[]> productResults = queryProducts.getResultList();
+            List<ProductDto> products  = new ArrayList<>();
+
+            for (Object[] result : productResults) {
+                ProductDto productDto = new ProductDto();
+                productDto.setName((String) result[0]);
+                productDto.setSku((String) result[1]);
+                productDto.setPrice(((Number) result[2]).doubleValue());
+                productDto.setExpiration(((Date) result[3]).toLocalDate());
+
+                products.add(productDto);
+            }
+
+            ProductPageDto productPageDto = new ProductPageDto();
+            productPageDto.setProducts(products);
+            productPageDto.setTotal(total.longValue());
+
+            return productPageDto;
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar produtos filtrados.");
+        }
+    }
+
+    private StringBuilder countFilteredProducts(String name, String sku,
+                                          Double minPrice, Double maxPrice){
+        try {
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sqlCount = new StringBuilder();
+
+            sqlCount.append(" SELECT COUNT(*) FROM tb_products WHERE 1=1 ");
+
+            if (!isBlank(name)) {
+                sqlCount.append(" AND name LIKE :name ");
+                parameters.put("name", "%" + name + "%");
+            }
+            if (!isBlank(sku)) {
+                sqlCount.append(" AND sku = :sku ");
+                parameters.put("sku", sku);
+            }
+            if (!isNull(minPrice)) {
+                sqlCount.append(" AND price > :minPrice ");
+                parameters.put("minPrice", minPrice);
+            }
+            if (!isNull(maxPrice)) {
+                sqlCount.append(" AND price < :maxPrice ");
+                parameters.put("maxPrice", maxPrice);
+            }
+
+            return sqlCount;
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro a contar total de clientes filtrados.");
+        }
+
+    }
+
+    private void setQueryParameters(Query query, Map<String, Object> parameters) {
+        for (Map.Entry<String, Object> param : parameters.entrySet()) {
+            query.setParameter(param.getKey(), param.getValue());
+        }
+    }
+}
