@@ -48,10 +48,13 @@ public class ClientService {
     }
 
     public ClientPageDto findAllClients(Integer page, Integer linesPerPage, String direction, String orderBy) {
+        Integer sanitizedPage = sanitizePage(page);
+        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
+
         String fixedDirection = resolveDirectionOrDefault(direction);
         String fixedOrderBy = resolveOrderByOrDefault(orderBy);
 
-        List<ClientDto> clients = clientRepository.findAllClients(page, linesPerPage, fixedDirection, fixedOrderBy);
+        List<ClientDto> clients = clientRepository.findAllClients(sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
         Long total = clientRepository.countTotalClients();
 
         ClientPageDto clientPageDto = new ClientPageDto();
@@ -66,6 +69,9 @@ public class ClientService {
                                              LocalDate birthEnd, Integer page,
                                              Integer linesPerPage, String direction,
                                              String orderBy) {
+
+        Integer sanitizedPage = sanitizePage(page);
+        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
 
         String validatedNameFilter = sanitizeNameFilter(name);
         String validatedEmailFilter = sanitizeEmailFilter(email);
@@ -84,7 +90,7 @@ public class ClientService {
         }
 
         return clientRepository.findFilteredClients(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart,
-                birthEnd, page, linesPerPage, fixedDirection, fixedOrderBy);
+                birthEnd, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     @Transactional(readOnly = true)

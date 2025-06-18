@@ -195,11 +195,11 @@ public class ProductRepository {
                 parameters.put("sku", sku);
             }
             if (!isNull(minPrice)) {
-                sqlProducts.append(" AND price > :minPrice ");
+                sqlProducts.append(" AND price >= :minPrice ");
                 parameters.put("minPrice", minPrice);
             }
             if (!isNull(maxPrice)) {
-                sqlProducts.append(" AND price < :maxPrice ");
+                sqlProducts.append(" AND price <= :maxPrice ");
                 parameters.put("maxPrice", maxPrice);
             }
 
@@ -261,11 +261,11 @@ public class ProductRepository {
                 parameters.put("sku", sku);
             }
             if (!isNull(minPrice)) {
-                sqlCount.append(" AND price > :minPrice ");
+                sqlCount.append(" AND price >= :minPrice ");
                 parameters.put("minPrice", minPrice);
             }
             if (!isNull(maxPrice)) {
-                sqlCount.append(" AND price < :maxPrice ");
+                sqlCount.append(" AND price <= :maxPrice ");
                 parameters.put("maxPrice", maxPrice);
             }
 

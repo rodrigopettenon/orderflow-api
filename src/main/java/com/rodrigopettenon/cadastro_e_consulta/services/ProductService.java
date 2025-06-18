@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.rodrigopettenon.cadastro_e_consulta.utils.LogUtil.*;
+import static com.rodrigopettenon.cadastro_e_consulta.utils.StringsValidation.normalizeSpaces;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -42,11 +43,14 @@ public class ProductService {
 
     public ProductPageDto findAllProducts(Integer page, Integer linesPerPage, String direction, String orderBy) {
 
+        Integer sanitizedPage = sanitizePage(page);
+        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(page);
+
         String fixedDirection = fixDirection(ALLOWED_DIRECTION, direction);
         String fixedOrderBy = fixOrderBy(ALLOWED_ORDER_BY, orderBy);
 
         Long total = productRepository.countAllProducts();
-        List<ProductDto> products = productRepository.findAllProducts(page, linesPerPage, fixedDirection, fixedOrderBy);
+        List<ProductDto> products = productRepository.findAllProducts(sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
 
         ProductPageDto productPageDto = new ProductPageDto();
         productPageDto.setTotal(total);
@@ -58,10 +62,19 @@ public class ProductService {
     public ProductPageDto findFilteredProducts(String name, String sku, Double minPrice,
                                        Double maxPrice, Integer page, Integer linesPerPage,
                                        String direction, String orderBy) {
+        Integer sanitizedPage = sanitizePage(page);
+        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
+
         String fixedDirection = fixDirection(ALLOWED_DIRECTION, direction);
         String fixedOrderBy = fixOrderBy(ALLOWED_ORDER_BY, orderBy);
 
-        return  productRepository.findFilteredProducts(name, sku, minPrice, maxPrice, page, linesPerPage, fixedDirection, fixedOrderBy);
+        String sanitizedName = sanitizeNameFilter(name);
+        String sanitizedSku = sanitizeSkuFilter(sku);
+        validateMinPriceAndMaxPriceRange(minPrice, maxPrice);
+
+
+
+        return  productRepository.findFilteredProducts(sanitizedName, sanitizedSku, minPrice, maxPrice, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     @Transactional(readOnly = true)
@@ -94,6 +107,59 @@ public class ProductService {
 
         logProductDeletedBySkuSuccessfully(sku);
         productRepository.deleteBySku(sku);
+    }
+
+    // Validações filtros GET
+
+    private String sanitizeNameFilter(String name) {
+        String nameWithoutDuplicateSpaces =  normalizeSpaces(name);
+        if (isBlank(name)) {
+            return null;
+        }
+        return nameWithoutDuplicateSpaces;
+    }
+
+    private String sanitizeSkuFilter(String sku) {
+        if (isBlank(sku)) {
+            return null;
+        }
+        if (sku.length() != 8) {
+            throw new ClientErrorException("O SKU do produto deve ter 8 caractéres.");
+        }
+        if (!isAlphanumeric(sku)) {
+            throw new ClientErrorException("O SKU do produto deve ser alfanumérico.");
+        }
+        return sku;
+    }
+
+    private void validateMinPriceAndMaxPriceRange(Double minPrice, Double maxPrice) {
+        if (!isNull(minPrice) && minPrice <= 0) {
+            throw new ClientErrorException("O preço minimo do produto não pode ser menor ou igual a 0.");
+        }
+        if (!isNull(maxPrice) && maxPrice <= 0) {
+            throw new ClientErrorException("O preço máximo do produto não pode ser menor ou igual a 0.");
+        }
+        if (!isNull(minPrice) && !isNull(maxPrice)) {
+            if (minPrice > maxPrice) {
+                throw new ClientErrorException("O preço minimo não pode ser maior que o preço maximo.");
+            }
+        }
+    }
+
+    // Validações de paginação page, linesPerPage, direction e OrderBy
+
+    private Integer sanitizePage(Integer page) {
+        if (isNull(page) || page < 0 ) {
+            return 0;
+        }
+        return page;
+    }
+
+    private Integer sanitizeLinesPerPage(Integer linesPerPage) {
+        if (isNull(linesPerPage) || linesPerPage < 0) {
+            return 10;
+        }
+        return linesPerPage;
     }
 
     private String fixDirection(List<String> directionAllowed, String direction) {
