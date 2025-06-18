@@ -48,11 +48,12 @@ public class ClientService {
     }
 
     public ClientPageDto findAllClients(Integer page, Integer linesPerPage, String direction, String orderBy) {
+        logFindAllClientsStart();
         Integer sanitizedPage = sanitizePage(page);
         Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
-
         String fixedDirection = resolveDirectionOrDefault(direction);
         String fixedOrderBy = resolveOrderByOrDefault(orderBy);
+
 
         List<ClientDto> clients = clientRepository.findAllClients(sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
         Long total = clientRepository.countTotalClients();
@@ -61,6 +62,7 @@ public class ClientService {
         clientPageDto.setClients(clients);
         clientPageDto.setTotal(total);
 
+        logFindAllClientsSuccessfully();
         return clientPageDto;
     }
 
@@ -69,6 +71,7 @@ public class ClientService {
                                              LocalDate birthEnd, Integer page,
                                              Integer linesPerPage, String direction,
                                              String orderBy) {
+        logFindFilteredClientsStart();
 
         Integer sanitizedPage = sanitizePage(page);
         Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);

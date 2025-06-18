@@ -66,6 +66,22 @@ public class LogUtil {
         logStartOfProcess("salvamento de um novo cliente com CPF", cpf);
     }
 
+    public static void logFindAllClientsStart() {
+        logStartOfProcess("busca de todos clientes", null);
+    }
+
+    public static void logGettingAllClientListStart() {
+        logStartOfProcess("obtenção da lista de clientes", null);
+    }
+
+    public static void logCountOfAllClientsInListStart() {
+        logStartOfProcess("contagem de todos clientes da lista", null);
+    }
+
+    public static void logFindFilteredClientsStart() {
+        logStartOfProcess("busca de clientes filtrados", null);
+    }
+
     public static void logFindClientByCpfStart(String cpf) {
         logStartOfProcess("pesquisa do cliente com CPF", cpf);
     }
@@ -100,6 +116,33 @@ public class LogUtil {
         logStartOfProcess("deleção do produto pelo SKU", sku);
     }
 
+    //LOGS DE INFO
+
+    private static void logInfoClients(String action, Object name, Object email, Object cpf, LocalDate birthStart, LocalDate birthEnd) {
+        logger.info("[INFO] Iniciando busca de {}: name={}, email={}, cpf={}, birthStart={}, birthEnd={}", action, name, email, cpf, birthStart, birthEnd);
+    }
+
+    private static void logInfoProducts(String action, Object name, Object sku, Object minPrice, Object maxPrice) {
+        logger.info("[INFO] Iniciando {}: name={}, sku={}, minPrice={}, maxPrice={}", action, name, sku, minPrice, maxPrice);
+    }
+
+    //Clients
+    public static void logInfoStartingClientsSearchQueryFiltered(String name, String email, String cpf, LocalDate birthStart, LocalDate birthEnd) {
+        logInfoClients("busca de clientes com filtros", name, email, cpf, birthStart, birthEnd);
+    }
+
+    public static void logInfoStartingFilteredClientCountQuery(String name, String email, String cpf, LocalDate birthStart, LocalDate birthEnd) {
+        logInfoClients("contagem de clientes com filtros", name, email, cpf, birthStart, birthEnd);
+    }
+
+    //Products
+    public static void logInfoStartingProductsSearchQueryFiltered(String name, String sku, Double minPrice, Double maxPrice) {
+        logInfoProducts("busca de produtos com filtros", name, sku, minPrice, maxPrice);
+    }
+
+    public static void logInfoStartingFilteredProductsCountQuery(String name, String sku, Double minPrice, Double maxPrice) {
+        logInfoProducts("contagem de produtos com filtros", name, sku, minPrice, maxPrice);
+    }
 
     //LOGS DE SUCESSOS
 
@@ -108,10 +151,26 @@ public class LogUtil {
         logger.info("[SUCESSO] Sucesso ao {}: {}", action, value );
     }
 
+    private static void logSuccessfully(String action, Object name, Object email, Object cpf, LocalDate birthStart, LocalDate birthEnd) {
+        logger.info("[SUCESSO] Sucesso ao {}: name={}, email={}, cpf={}, birthStart={}, birthEnd={}",action, name, email, cpf, birthStart, birthEnd);
+    }
+
+    private static void logSuccessfully(String action, Object name, Object sku, Object minPrice, Object maxPrice) {
+        logger.info("[SUCESSO] Sucesso ao {}: name={}, sku={}, minPrice={}, maxPrice={}",action, name, sku, minPrice, maxPrice);
+    }
+
 
     //Clients
+    public static void logFindFilteredClientsSuccessfully(String name, String email, String cpf, LocalDate birthStart, LocalDate birthEnd) {
+        logSuccessfully("buscar por clientes filtrados", name, email, cpf, birthStart, birthEnd);
+    }
+
     public static void logClientSavedWithCpfSuccessfully(String cpf) {
         logSuccessfully("salvar cliente de CPF", cpf);
+    }
+
+    public static void logFindAllClientsSuccessfully() {
+        logSuccessfully("buscar todos os clientes", null);
     }
 
     public static void logFoundClientByCpfSuccessfully(String cpf) {
@@ -132,6 +191,10 @@ public class LogUtil {
 
 
     //Products
+    public static void logFindFilteredProductsSuccessfully(String name, String sku, Double minPrice, Double maxPrice) {
+        logSuccessfully("buscar por produtos filtrados", name, sku, minPrice, maxPrice);
+    }
+
     public static void logProductSavedWithSkuSuccessfully(String sku) {
         logSuccessfully("salvar produto de SKU", sku);
     }
@@ -194,6 +257,22 @@ public class LogUtil {
 
 
     //Clients
+    public static void logUnexpectedErrorOnFindFilteredProducts(Exception e) {
+        logUnexpectedError("buscar produtos filtrados", null, e);
+    }
+
+    public static void logUnexpectedErrorOnFindAllClientsOrderBy(String orderBy, Exception e) {
+        logUnexpectedError("buscar todos os clientes ordenados por", orderBy, e);
+    }
+
+    public static void logUnexpectedErrorOnCountAllClientsInList(Exception e) {
+        logUnexpectedError("realizar contagem de todos clientes na lista", null, e);
+    }
+
+    public static void logUnexpectedErrorOnFindFilteredClients(Exception e) {
+        logUnexpectedError("buscar por clientes filtrados", null, e);
+    }
+
     public static void logUnexpectedErrorOnFindClientByCpf(String cpf, Exception e) {
         logUnexpectedError("buscar cliente pelo CPF", cpf, e);
     }

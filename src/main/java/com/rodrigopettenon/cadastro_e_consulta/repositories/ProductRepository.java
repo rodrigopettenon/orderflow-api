@@ -154,7 +154,7 @@ public class ProductRepository {
 
             query.executeUpdate();
         } catch (Exception e) {
-            logUnexpectedErrorOnUpdateProductBySku(sku, e);
+            logUnexpectedErrorOnDeleteProductBySku(sku, e);
             throw new ClientErrorException("Erro ao realizar deleção do produto pela SKU.");
         }
 
@@ -217,10 +217,11 @@ public class ProductRepository {
             setQueryParameters(queryProducts, parameters);
             setQueryParameters(queryCount, parameters);
 
+            logInfoStartingFilteredProductsCountQuery(name, sku, minPrice, maxPrice);
             Object countResult = queryCount.getSingleResult();
             Number total = (Number) countResult;
 
-
+            logInfoStartingProductsSearchQueryFiltered(name, sku, minPrice, maxPrice);
             List<Object[]> productResults = queryProducts.getResultList();
             List<ProductDto> products  = new ArrayList<>();
 
@@ -238,8 +239,10 @@ public class ProductRepository {
             productPageDto.setProducts(products);
             productPageDto.setTotal(total.longValue());
 
+            logFindFilteredProductsSuccessfully(name, sku, minPrice, maxPrice);
             return productPageDto;
         } catch (Exception e) {
+            logUnexpectedErrorOnFindFilteredProducts(e);
             throw new ClientErrorException("Erro ao buscar produtos filtrados.");
         }
     }

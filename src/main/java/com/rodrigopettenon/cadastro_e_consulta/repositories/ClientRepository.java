@@ -78,6 +78,7 @@ public class ClientRepository {
 
     public List<ClientDto> findAllClients(Integer page, Integer linesPerPage, String direction, String orderBy) {
         try {
+            logGettingAllClientListStart();
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT name, email, cpf, birth_date FROM tb_clients ");
             sql.append(" ORDER BY " + orderBy + " " + direction + " ");
@@ -101,8 +102,10 @@ public class ClientRepository {
                 clientList.add(clientDto);
             }
 
+            logFindAllClientsStart();
             return clientList;
         } catch (Exception e) {
+            logUnexpectedErrorOnFindAllClientsOrderBy(orderBy, e);
             throw new ClientErrorException("Erro ao buscar clientes.");
         }
     }
@@ -209,6 +212,7 @@ public class ClientRepository {
 
     public Long countTotalClients() {
         try {
+            logCountOfAllClientsInListStart();
             String sql = "SELECT COUNT(*) FROM tb_clients";
 
             Query query = em.createNativeQuery(sql);
@@ -218,6 +222,7 @@ public class ClientRepository {
 
             return total.longValue();
         } catch (Exception e) {
+            logUnexpectedErrorOnCountAllClientsInList(e);
             throw new ClientErrorException("Erro ao contar total de clientes.");
         }
     }
@@ -248,9 +253,11 @@ public class ClientRepository {
             setQueryParameters(queryClients, parameters);
             setQueryParameters(queryTotal, parameters);
 
+            logInfoStartingClientsSearchQueryFiltered(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart, birthEnd);
             List<Object[]> clientResults = queryClients.getResultList();
             List<ClientDto> clients = new ArrayList<>();
 
+            logInfoStartingFilteredClientCountQuery(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart, birthEnd);
             Object totalResult = queryTotal.getSingleResult();
             Number total = (Number) totalResult;
 
@@ -268,9 +275,11 @@ public class ClientRepository {
             clientPageDto.setClients(clients);
             clientPageDto.setTotal(total.longValue());
 
+            logFindFilteredClientsSuccessfully(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart, birthEnd);
             return clientPageDto;
 
         } catch (Exception e) {
+            logUnexpectedErrorOnFindFilteredClients(e);
             throw new ClientErrorException("Erro ao buscar clientes filtrados.");
         }
     }
