@@ -249,34 +249,29 @@ public class ProductRepository {
 
     private StringBuilder countFilteredProducts(String name, String sku,
                                           Double minPrice, Double maxPrice){
-        try {
-            Map<String, Object> parameters = new HashMap<>();
-            StringBuilder sqlCount = new StringBuilder();
+        Map<String, Object> parameters = new HashMap<>();
+        StringBuilder sqlCount = new StringBuilder();
 
-            sqlCount.append(" SELECT COUNT(*) FROM tb_products WHERE 1=1 ");
+        sqlCount.append(" SELECT COUNT(*) FROM tb_products WHERE 1=1 ");
 
-            if (!isBlank(name)) {
-                sqlCount.append(" AND name LIKE :name ");
-                parameters.put("name", "%" + name + "%");
-            }
-            if (!isBlank(sku)) {
-                sqlCount.append(" AND sku = :sku ");
-                parameters.put("sku", sku);
-            }
-            if (!isNull(minPrice)) {
-                sqlCount.append(" AND price >= :minPrice ");
-                parameters.put("minPrice", minPrice);
-            }
-            if (!isNull(maxPrice)) {
-                sqlCount.append(" AND price <= :maxPrice ");
-                parameters.put("maxPrice", maxPrice);
-            }
-
-            return sqlCount;
-
-        } catch (Exception e) {
-            throw new ClientErrorException("Erro a contar total de clientes filtrados.");
+        if (!isBlank(name)) {
+            sqlCount.append(" AND name LIKE :name ");
+            parameters.put("name", "%" + name + "%");
         }
+        if (!isBlank(sku)) {
+            sqlCount.append(" AND sku = :sku ");
+            parameters.put("sku", sku);
+        }
+        if (!isNull(minPrice)) {
+            sqlCount.append(" AND price >= :minPrice ");
+            parameters.put("minPrice", minPrice);
+        }
+        if (!isNull(maxPrice)) {
+            sqlCount.append(" AND price <= :maxPrice ");
+            parameters.put("maxPrice", maxPrice);
+        }
+
+        return sqlCount;
 
     }
 

@@ -61,6 +61,18 @@ public class LogUtil {
 
 
     //Product
+    public static void logProductSkuFilterValidation(String sku) {
+        logFilterValidation("SKU",sku);
+    }
+
+    public static void logProductMinPriceFilterValidation(Double minPrice) {
+        logFilterValidation("preço minimo", minPrice);
+    }
+
+    public static void logProductMaxPriceFilterValidation(Double maxPrice) {
+        logFilterValidation("preço máximo", maxPrice);
+    }
+
     public static void logProductNameValidation(String name) {
         logValidation("nome", name);
     }

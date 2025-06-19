@@ -69,8 +69,9 @@ public class ProductService {
         String fixedOrderBy = fixOrderBy(ALLOWED_ORDER_BY, orderBy);
 
         String sanitizedName = sanitizeNameFilter(name);
-        String sanitizedSku = sanitizeSkuFilter(sku);
-        validateMinPriceAndMaxPriceRange(minPrice, maxPrice);
+        String sanitizedSku = validateSkuFilter(sku);
+        validateMinPriceFilter(minPrice, maxPrice);
+        validateMaxPriceFilter(maxPrice, minPrice);
 
 
 
@@ -119,7 +120,8 @@ public class ProductService {
         return nameWithoutDuplicateSpaces;
     }
 
-    private String sanitizeSkuFilter(String sku) {
+    private String validateSkuFilter(String sku) {
+        logProductSkuFilterValidation(sku);
         if (isBlank(sku)) {
             return null;
         }
@@ -132,16 +134,26 @@ public class ProductService {
         return sku;
     }
 
-    private void validateMinPriceAndMaxPriceRange(Double minPrice, Double maxPrice) {
+    private void validateMinPriceFilter(Double minPrice, Double maxPrice) {
+        logProductMinPriceFilterValidation(minPrice);
         if (!isNull(minPrice) && minPrice <= 0) {
             throw new ClientErrorException("O preço minimo do produto não pode ser menor ou igual a 0.");
-        }
-        if (!isNull(maxPrice) && maxPrice <= 0) {
-            throw new ClientErrorException("O preço máximo do produto não pode ser menor ou igual a 0.");
         }
         if (!isNull(minPrice) && !isNull(maxPrice)) {
             if (minPrice > maxPrice) {
                 throw new ClientErrorException("O preço minimo não pode ser maior que o preço maximo.");
+            }
+        }
+    }
+
+    private void validateMaxPriceFilter(Double maxPrice, Double minPrice) {
+        logProductMaxPriceFilterValidation(maxPrice);
+        if (!isNull(maxPrice) && maxPrice <= 0) {
+            throw new ClientErrorException("O preço máximo do produto não pode ser menor ou igual a 0.");
+        }
+        if (!isNull(maxPrice) && !isNull(minPrice)) {
+            if (minPrice < maxPrice) {
+                throw new ClientErrorException("O preço maximo não pode ser menor que o preço minimo.");
             }
         }
     }
