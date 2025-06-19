@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -82,18 +81,11 @@ public class ClientService {
         String fixedDirection = resolveDirectionOrDefault(direction);
         String fixedOrderBy = resolveOrderByOrDefault(orderBy);
 
-        List<LocalDate> validatedBirthDateRange = validateBirthDateRange(birthStart, birthEnd);
+        LocalDate validatedBirthStart = validateBirthStart(birthStart, birthEnd);
+        LocalDate validatedBirthEnd = validateBirthEnd(birthEnd, birthStart);
 
-        if (!validatedBirthDateRange.isEmpty()) {
-            birthStart = validatedBirthDateRange.get(0);
-            birthEnd = validatedBirthDateRange.get(1);
-        }else {
-            birthStart = null;
-            birthEnd = null;
-        }
-
-        return clientRepository.findFilteredClients(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart,
-                birthEnd, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
+        return clientRepository.findFilteredClients(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, validatedBirthStart,
+                validatedBirthEnd, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     @Transactional(readOnly = true)
@@ -144,6 +136,7 @@ public class ClientService {
     //Validações filtros GET
 
     private String sanitizeNameFilter(String name) {
+        logClientNameFilterValidation(name);
         String validatedNameFilter = normalizeSpaces(name);
         if (isBlank(validatedNameFilter)) {
             return null;
@@ -152,6 +145,7 @@ public class ClientService {
     }
 
     private String sanitizeEmailFilter(String email) {
+        logClientEmailFilterValidation(email);
         String validatedEmailFilter = removeAllSpaces(email);
         if (isBlank(validatedEmailFilter)) {
             return null;
@@ -160,23 +154,47 @@ public class ClientService {
     }
 
     private String sanitizeAndValidateCpfFilter(String cpf) {
+        logClientCpfFilterValidation(cpf);
         String validatedCpfFilter = denormalizeCpf(cpf);
-        if(isBlank(validatedCpfFilter) || !isValidCPF(validatedCpfFilter) || validatedCpfFilter.length() != 11) {
+        if(isBlank(validatedCpfFilter)) {
             return null;
         }
+        if (validatedCpfFilter.length() != 11) {
+            throw new ClientErrorException("O CPF do cliente deve conter 11 digitos.");
+        }
+        if (!isValidCPF(validatedCpfFilter)) {
+            throw new ClientErrorException("O CPF do cliente é inválido.");
+        }
+
         return validatedCpfFilter;
     }
 
-    private List<LocalDate> validateBirthDateRange(LocalDate birthStart, LocalDate birthEnd) {
-        List<LocalDate> dates = new ArrayList<>();
-        dates.add(birthStart);
-        dates.add(birthEnd);
-
-        if (isNull(birthStart) || isNull(birthEnd) || birthStart.isAfter(LocalDate.now()) || birthEnd.isAfter(LocalDate.now()) || birthStart.isAfter(birthEnd)) {
-            dates.clear();
-            return dates;
+    private LocalDate validateBirthStart(LocalDate birthStart, LocalDate birthEnd) {
+        logClientBirthStartFilterValidation(birthStart);
+        if (isNull(birthStart) || isNull(birthEnd)) {
+            return null;
         }
-        return dates;
+        if (birthStart.isAfter(LocalDate.now())) {
+            throw new ClientErrorException("A data de nascimento de ínicio não pode ser futura.");
+        }
+        if (birthStart.isAfter(birthEnd)) {
+            throw new ClientErrorException("A data de nascimento de ínicio não pode ser maior que a data final.");
+        }
+        return birthStart;
+    }
+
+    private LocalDate validateBirthEnd(LocalDate birthEnd, LocalDate birthStart) {
+        logClientBirthEndFilterValidation(birthEnd);
+        if(isNull(birthStart) || isNull(birthEnd)) {
+            return null;
+        }
+        if (birthEnd.isAfter(LocalDate.now())) {
+            throw new ClientErrorException("A data de nascimento final não pode ser futura.");
+        }
+        if (birthEnd.isBefore(birthStart)) {
+            throw new ClientErrorException("A data de nascimento final não pode ser menor que a data de ínicio. ");
+        }
+        return birthEnd;
     }
 
     // Validações page, linesPerPage, direction e OrderBy paginação
@@ -273,7 +291,7 @@ public class ClientService {
             throw new ClientErrorException("O CPF do cliente é obrigatório.");
         }
         if (cpf.length() != 11) {
-            throw new ClientErrorException("O CPF deve conter 11 digitos.");
+            throw new ClientErrorException("O CPF do cliente deve conter 11 digitos.");
         }
         if (!isValidCPF(cpf)) {
             throw new ClientErrorException("O CPF do cliente é inválido.");

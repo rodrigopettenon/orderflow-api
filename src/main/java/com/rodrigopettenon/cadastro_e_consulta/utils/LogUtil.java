@@ -16,8 +16,32 @@ public class LogUtil {
         logger.info("[VALIDAÇÃO] Validando {}: {} ", field, value);
     }
 
+    private static void logFilterValidation(String action, Object value) {
+        logger.info("[VALIDAÇÃO - FILTRO] Validando filtro {}: {}",action, value);
+    }
+
 
     //Client
+    public static void logClientNameFilterValidation(String name) {
+        logFilterValidation("nome", name);
+    }
+
+    public static void logClientEmailFilterValidation(String email) {
+        logFilterValidation("email", email);
+    }
+
+    public static void logClientCpfFilterValidation(String cpf) {
+        logFilterValidation("CPF",cpf);
+    }
+
+    public static void logClientBirthStartFilterValidation(LocalDate birthStart) {
+        logFilterValidation("data de nascimento ínicio", birthStart);
+    }
+
+    public static void logClientBirthEndFilterValidation(LocalDate birthEnd) {
+        logFilterValidation("data de nascimento final", birthEnd);
+    }
+
     public static void logClientNameValidation(String name) {
         logValidation("nome", name);
     }
@@ -33,6 +57,7 @@ public class LogUtil {
     public static void logClientBirthValidation(LocalDate birth) {
         logValidation("data de nascimento", birth);
     }
+
 
 
     //Product
