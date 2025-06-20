@@ -3,6 +3,7 @@ package com.rodrigopettenon.cadastro_e_consulta.repositories;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
+import com.rodrigopettenon.cadastro_e_consulta.models.ClientModel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -10,10 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.rodrigopettenon.cadastro_e_consulta.utils.LogUtil.*;
 import static java.util.Objects.isNull;
@@ -41,6 +39,21 @@ public class ClientRepository {
         }catch (Exception e) {
             logUnexpectedErrorOnSaveClientWithCpf(clientDto.getCpf(), e);
             throw new ClientErrorException("Erro ao cadastrar cliente.");
+        }
+    }
+
+    public boolean existsById(Long id) {
+        try{
+            String sql = ( "SELECT 1 FROM tb_clients WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id);
+
+            List<?> result = query.getResultList();
+            return !result.isEmpty(); // Se a lista estiver vazia retornará false.
+
+        }catch (Exception e) {
+            throw new ClientErrorException("Erro ao verificar existência do ID.");
         }
     }
 
@@ -110,9 +123,60 @@ public class ClientRepository {
         }
     }
 
+    public ClientDto findById(Long id) {
+        try{
+            String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id);
+
+            List<Object[]> resultList = query.getResultList();
+
+            if (resultList.isEmpty()) {
+                throw new ClientErrorException("Cliente não encontrado pelo Id: " +  id);
+            }
+
+
+            Object[] result = resultList.get(0);
+            ClientDto clientFound = new ClientDto();
+            clientFound.setId(((Number) result[0]).longValue());
+            clientFound.setName((String) result[1]);
+            clientFound.setEmail((String) result[2]);
+            clientFound.setCpf((String) result[3]);
+            clientFound.setBirth(((Date) result[4]).toLocalDate());
+
+            return clientFound;
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar cliente pelo id: " + id);
+        }
+    }
+
+    public ClientModel findClientModelById(Long id) {
+        String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1 " );
+
+        Query query = em.createNativeQuery(sql)
+                .setParameter("id", id);
+
+        List<Object[]> resultList = query.getResultList();
+
+        if (resultList.isEmpty()) {
+            throw new ClientErrorException("Cliente não encontrado pelo id:" + id);
+        }
+
+        Object[] result = resultList.get(0);
+        ClientModel clientModel = new ClientModel();
+        clientModel.setId(((Number) result[0]).longValue());
+        clientModel.setName((String) result[1]);
+        clientModel.setEmail((String) result[2]);
+        clientModel.setCpf((String) result[3]);
+        clientModel.setBirth(((Date) result[4]).toLocalDate());
+
+        return clientModel;
+    }
+
     public ClientDto findByEmail(String email) {
         try {
-            String sql = (" SELECT * FROM tb_clients WHERE email = :email LIMIT 1 ");
+            String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE email = :email LIMIT 1 ");
 
             Query query = em.createNativeQuery(sql)
                     .setParameter("email", email);
@@ -120,7 +184,7 @@ public class ClientRepository {
             List<Object[]> resultList = query.getResultList();
 
             if (resultList.isEmpty()) {
-                throw new ClientErrorException("Cliente não encontrado pelo email.");
+                throw new ClientErrorException("Cliente não encontrado pelo email: " + email);
             }
 
             Object[] result = resultList.get(0);
@@ -141,14 +205,14 @@ public class ClientRepository {
 
     public ClientDto findByCpf(String cpf) {
         try{
-            String sql = " SELECT * FROM tb_clients WHERE cpf = :cpf LIMIT 1 ";
+            String sql = " SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE cpf = :cpf LIMIT 1 ";
 
             Query query = em.createNativeQuery(sql)
                     .setParameter("cpf", cpf);
 
             List<Object[]> resultList = query.getResultList();
             if (resultList.isEmpty()) {
-                throw new ClientErrorException("Cliente não encontrado pelo CPF.");
+                throw new ClientErrorException("Cliente não encontrado pelo CPF: " + cpf);
             }
 
             Object[] result = resultList.get(0);

@@ -14,6 +14,11 @@ public class ClientErrorException extends RuntimeException{
         super(msg, cause);
     }
 
+    public ClientErrorException(String msg, Object object){
+        super(msg);
+        this.object = object;
+    }
+
     public Object getObject() {
         return object;
     }

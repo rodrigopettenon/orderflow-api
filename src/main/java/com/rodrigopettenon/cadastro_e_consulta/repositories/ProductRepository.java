@@ -185,7 +185,6 @@ public class ProductRepository {
             StringBuilder sqlProducts = new StringBuilder();
             sqlProducts.append(" SELECT name, sku, price, expiration_date FROM tb_products WHERE 1=1 ");
 
-
             if (!isBlank(name)) {
                 sqlProducts.append(" AND name LIKE :name ");
                 parameters.put("name", "%" + name + "%");
