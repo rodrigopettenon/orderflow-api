@@ -42,7 +42,7 @@ public class ClientService {
         cpfExists(cpf);
         clientDto.setCpf(cpf);
 
-        clientRepository.save(clientDto);
+        clientRepository.saveClient(clientDto);
         logClientSavedWithCpfSuccessfully(cpf);
     }
 
@@ -95,7 +95,7 @@ public class ClientService {
         validateEmail(email);
         emailNotExist(email);
 
-        return clientRepository.findByEmail(email);
+        return clientRepository.findClientByEmail(email);
     }
 
     @Transactional(readOnly = true)
@@ -104,7 +104,7 @@ public class ClientService {
         String validatedCpf = validateAndNormalizeCpf(cpf);
         cpfNotExist(validatedCpf);
 
-        return clientRepository.findByCpf(validatedCpf);
+        return clientRepository.findClientByCpf(validatedCpf);
     }
 
     @Transactional
@@ -119,7 +119,7 @@ public class ClientService {
         validateEmail(clientDto.getEmail());
         validateBirth(clientDto.getBirth());
 
-        return clientRepository.updateByCpf(validatedCpf, clientDto);
+        return clientRepository.updateClientByCpf(validatedCpf, clientDto);
     }
 
     @Transactional
@@ -129,7 +129,7 @@ public class ClientService {
         String validatedCpf = validateAndNormalizeCpf(cpf);
         cpfNotExist(validatedCpf);
 
-        clientRepository.deleteByCpf(validatedCpf);
+        clientRepository.deleteClientByCpf(validatedCpf);
         logClientDeletedByCpfSuccessfully(cpf);
     }
 
@@ -263,14 +263,14 @@ public class ClientService {
     }
 
     private void emailExists(String email) {
-        if (clientRepository.existsByEmail(email)) {
+        if (clientRepository.existsClientByEmail(email)) {
             logClientEmailAlreadyExists(email);
             throw new ClientErrorException("O email do cliente já está cadastrado.");
         }
     }
 
     private void emailNotExist(String email) {
-        if (!clientRepository.existsByEmail(email)) {
+        if (!clientRepository.existsClientByEmail(email)) {
             logClientNotFoundByEmail(email);
             throw new ClientErrorException("Nenhum cliente cadastrado com esse email.");
         }
@@ -299,14 +299,14 @@ public class ClientService {
     }
 
     private void cpfExists(String cpf) {
-        if (clientRepository.existsByCpf(cpf)) {
+        if (clientRepository.existsClientByCpf(cpf)) {
             logClientCpfAlreadyExists(cpf);
             throw new ClientErrorException("O CPF do cliente já está cadastrado.");
         }
     }
 
     private void cpfNotExist(String cpf) {
-        if (!clientRepository.existsByCpf(cpf)) {
+        if (!clientRepository.existsClientByCpf(cpf)) {
             logClientNotFoundByCpf(cpf);
             throw new ClientErrorException("Nenhum cliente cadastrado com esse CPF.");
         }

@@ -8,6 +8,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -42,6 +44,44 @@ public class OrderRepository {
 
         }catch (Exception e) {
             throw new ClientErrorException("Erro ao cadastrar pedido");
+        }
+    }
+
+    public OrderDto findOrderById(UUID id) {
+        try {
+            String sql = (" SELECT id, client_id, order_date, status FROM tb_order WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id.toString());
+
+            List<Object[]> resultList = query.getResultList();
+            Object[] result = resultList.get(0);
+
+            OrderDto orderDto = new OrderDto();
+            orderDto.setId(UUID.fromString(((String) result[0])));
+            orderDto.setClientId(((Number) result[1]).longValue());
+            orderDto.setOrderDate(((Timestamp) result[2]).toLocalDateTime());
+            orderDto.setStatus((String) result[3]);
+
+            return orderDto;
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar pedido pelo id");
+        }
+    }
+
+    public Boolean existsOrderById(UUID id) {
+        try {
+            String sql = (" SELECT 1 FROM tb_order WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id.toString());
+
+            List<?> resultList = query.getResultList();
+
+            return !resultList.isEmpty();
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao verificar existencia pelo id: " + id);
         }
     }
 }

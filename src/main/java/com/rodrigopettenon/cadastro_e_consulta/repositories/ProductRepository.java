@@ -43,7 +43,7 @@ public class ProductRepository {
         }
     }
 
-    public Boolean existsBySku(String sku) {
+    public Boolean existsProductBySku(String sku) {
         try{
             String sql = " SELECT 1 FROM tb_products WHERE sku = :sku LIMIT 1 ";
 
@@ -92,7 +92,7 @@ public class ProductRepository {
 
     }
 
-    public ProductDto findBySku(String sku) {
+    public ProductDto findProductBySku(String sku) {
         try{
             String sql = " SELECT id, name, sku, price, expiration_date FROM tb_products WHERE sku = :sku";
 
@@ -104,7 +104,7 @@ public class ProductRepository {
             if(resultList.isEmpty()) {
                 throw new ClientErrorException("Produto não encontrado pelo SKU.");
             }
-            Object[] result = resultList.getFirst();
+            Object[] result = resultList.get(0);
             ProductDto productDtoFound = new ProductDto();
             productDtoFound.setId(UUID.fromString((String) result[0]));
             productDtoFound.setName((String) result[1]);
@@ -121,7 +121,7 @@ public class ProductRepository {
 
     }
 
-    public ProductDto updateBySku(String sku, ProductDto productDto) {
+    public ProductDto updateProductBySku(String sku, ProductDto productDto) {
         try{
             StringBuilder sql = new StringBuilder();
             sql.append(" UPDATE tb_products SET name = :name, price = :price, expiration_date = :expiration ");
@@ -145,7 +145,7 @@ public class ProductRepository {
 
     }
 
-    public void deleteBySku(String sku) {
+    public void deleteProductBySku(String sku) {
         try{
             String sql = " DELETE FROM tb_products WHERE sku = :sku LIMIT 1 ";
 

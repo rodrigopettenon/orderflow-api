@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static com.rodrigopettenon.cadastro_e_consulta.utils.StringsValidation.removeAllSpaces;
 import static java.util.Objects.isNull;
@@ -48,7 +49,7 @@ public class OrderService{
         if (isNull(clientId)) {
             throw new ClientErrorException("O id do cliente é obrigatório.");
         }
-        if (!clientRepository.existsById(clientId)) {
+        if (!clientRepository.existsClientById(clientId)) {
             throw new ClientErrorException("Não existe cliente cadastrado com o id informado: " + clientId);
         }
     }
@@ -67,4 +68,18 @@ public class OrderService{
         }
     }
 
+    public OrderDto findById(UUID id) {
+        validateId(id);
+
+        return orderRepository.findOrderById(id);
+    }
+
+    private void validateId(UUID id) {
+        if (isNull(id)) {
+            throw new ClientErrorException("O id do pedido é obrigatório.");
+        }
+        if (!orderRepository.existsOrderById(id)){
+            throw new ClientErrorException("O id do pedido não está cadastrado.");
+        }
+    }
 }

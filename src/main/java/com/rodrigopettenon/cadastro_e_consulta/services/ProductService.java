@@ -85,7 +85,7 @@ public class ProductService {
         validateSku(sku);
         skuNotExist(sku);
 
-        return productRepository.findBySku(sku);
+        return productRepository.findProductBySku(sku);
     }
 
     @Transactional
@@ -96,7 +96,7 @@ public class ProductService {
         validateSku(sku);
         skuNotExist(sku);
 
-        return productRepository.updateBySku(sku, productDto);
+        return productRepository.updateProductBySku(sku, productDto);
     }
 
     @Transactional
@@ -107,7 +107,7 @@ public class ProductService {
         skuNotExist(sku);
 
         logProductDeletedBySkuSuccessfully(sku);
-        productRepository.deleteBySku(sku);
+        productRepository.deleteProductBySku(sku);
     }
 
     // Validações filtros GET
@@ -220,14 +220,14 @@ public class ProductService {
     }
 
     private void skuExists(String sku) {
-        if (productRepository.existsBySku(sku)) {
+        if (productRepository.existsProductBySku(sku)) {
             logProductSkuAlreadyExists(sku);
             throw new ClientErrorException("O SKU informado já está cadastrado.");
         }
     }
 
     private void skuNotExist(String sku) {
-        if (!productRepository.existsBySku(sku)) {
+        if (!productRepository.existsProductBySku(sku)) {
             logProductNotFoundBySku(sku);
             throw new ClientErrorException("O SKU informado não está cadastrado.");
         }

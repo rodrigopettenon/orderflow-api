@@ -23,7 +23,7 @@ public class ClientRepository {
     private EntityManager em;
 
 
-    public void save(ClientDto clientDto) {
+    public void saveClient(ClientDto clientDto) {
         try{
             StringBuilder sql = new StringBuilder();
             sql.append(" INSERT INTO tb_clients (name, email, cpf, birth_date) ");
@@ -42,7 +42,7 @@ public class ClientRepository {
         }
     }
 
-    public boolean existsById(Long id) {
+    public boolean existsClientById(Long id) {
         try{
             String sql = ( "SELECT 1 FROM tb_clients WHERE id = :id LIMIT 1 ");
 
@@ -57,7 +57,7 @@ public class ClientRepository {
         }
     }
 
-    public boolean existsByCpf(String cpf) {
+    public boolean existsClientByCpf(String cpf) {
         try{
             String sql = (" SELECT 1 FROM tb_clients WHERE cpf = :cpf LIMIT 1");
 
@@ -73,7 +73,7 @@ public class ClientRepository {
         }
     }
 
-    public boolean existsByEmail(String email) {
+    public boolean existsClientByEmail(String email) {
         try {
             String sql = (" SELECT 1 FROM tb_clients WHERE email = :email LIMIT 1 ");
 
@@ -123,7 +123,7 @@ public class ClientRepository {
         }
     }
 
-    public ClientDto findById(Long id) {
+    public ClientDto findClientById(Long id) {
         try{
             String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1");
 
@@ -174,7 +174,7 @@ public class ClientRepository {
         return clientModel;
     }
 
-    public ClientDto findByEmail(String email) {
+    public ClientDto findClientByEmail(String email) {
         try {
             String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE email = :email LIMIT 1 ");
 
@@ -203,7 +203,7 @@ public class ClientRepository {
         }
     }
 
-    public ClientDto findByCpf(String cpf) {
+    public ClientDto findClientByCpf(String cpf) {
         try{
             String sql = " SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE cpf = :cpf LIMIT 1 ";
 
@@ -231,7 +231,7 @@ public class ClientRepository {
         }
     }
 
-    public ClientDto updateByCpf(String cpf, ClientDto clientDto) {
+    public ClientDto updateClientByCpf(String cpf, ClientDto clientDto) {
         try{
             StringBuilder sql = new StringBuilder();
             sql.append(" UPDATE tb_clients SET name = :name, email = :email, birth_date = :birth ");
@@ -259,7 +259,7 @@ public class ClientRepository {
 
     }
 
-    public void deleteByCpf(String cpf) {
+    public void deleteClientByCpf(String cpf) {
         try{
             String sql = " DELETE FROM tb_clients WHERE cpf = :cpf ";
 
