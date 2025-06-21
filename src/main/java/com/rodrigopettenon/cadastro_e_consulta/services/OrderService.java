@@ -1,6 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.services;
 
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderDto;
+import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.models.ClientModel;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderModel;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static com.rodrigopettenon.cadastro_e_consulta.utils.StringsValidation.removeAllSpaces;
@@ -81,5 +83,12 @@ public class OrderService{
         if (!orderRepository.existsOrderById(id)){
             throw new ClientErrorException("O id do pedido não está cadastrado.");
         }
+    }
+
+    public OrderPageDto findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
+                                           LocalDateTime dateTimeEnd, String status, Integer page,
+                                           Integer linesPerPage, String direction, String orderBy) {
+
+        return orderRepository.findFilteredOrders(id, clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy);
     }
 }
