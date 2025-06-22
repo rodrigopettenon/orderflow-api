@@ -152,7 +152,7 @@ public class ProductService {
             throw new ClientErrorException("O preço máximo do produto não pode ser menor ou igual a 0.");
         }
         if (!isNull(maxPrice) && !isNull(minPrice)) {
-            if (minPrice < maxPrice) {
+            if (minPrice > maxPrice) {
                 throw new ClientErrorException("O preço maximo não pode ser menor que o preço minimo.");
             }
         }

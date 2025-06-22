@@ -7,9 +7,8 @@ public class ProductPageDto implements Serializable {
 
     private static final long serialVersionUID = -1153191500000498702L;
 
-    private List<ProductDto> products;
-
     private Long total;
+    private List<ProductDto> products;
 
     public List<ProductDto> getProducts() {
         return products;

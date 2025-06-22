@@ -1,6 +1,5 @@
 package com.rodrigopettenon.cadastro_e_consulta.repositories;
 
-import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
@@ -93,6 +92,22 @@ public class OrderRepository {
     public OrderPageDto findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
                                        LocalDateTime dateTimeEnd, String status, Integer page,
                                        Integer linesPerPage, String direction, String orderBy) {
+
+            Long total = queryCountTotalFiltered(id, clientId, dateTimeStart, dateTimeEnd, status);
+
+            List<OrderDto> results = queryFindFilteredOrders(id, clientId, dateTimeStart,
+                    dateTimeEnd, status, page, linesPerPage, direction, orderBy);
+
+            OrderPageDto orderPageDto = new OrderPageDto();
+            orderPageDto.setTotal(total);
+            orderPageDto.setOrders(results);
+
+            return orderPageDto;
+    }
+
+    private List<OrderDto> queryFindFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
+                                                   LocalDateTime dateTimeEnd, String status, Integer page,
+                                                   Integer linesPerPage, String direction, String orderBy) {
         try{
             Map<String, Object> parameters = new HashMap<>();
             StringBuilder sql = new StringBuilder();
@@ -121,9 +136,7 @@ public class OrderRepository {
                     .setParameter("limit", linesPerPage)
                     .setParameter("offset", page * linesPerPage);
 
-            for (Map.Entry<String, Object> param : parameters.entrySet()) {
-                query.setParameter(param.getKey(), param.getValue());
-            }
+            setQueryParameters(parameters, query);
 
             List<Object[]> resultList = query.getResultList();
             List<OrderDto> results = new ArrayList<>();
@@ -137,14 +150,53 @@ public class OrderRepository {
 
                 results.add(orderDto);
             }
-
-            OrderPageDto orderPageDto = new OrderPageDto();
-            orderPageDto.setOrders(results);
-
-            return orderPageDto;
-
+            return results;
         } catch (Exception e) {
-            throw new ClientErrorException("Erro ao buscar cliente filtrado.");
+            throw new ClientErrorException("Erro ao buscar pedidos filtrados.");
+        }
+
+    }
+
+    private Long queryCountTotalFiltered(UUID id, Long clientId, LocalDateTime dateTimeStart,
+                                             LocalDateTime dateTimeEnd, String status) {
+        try {
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT COUNT(*) FROM tb_orders WHERE 1=1 ");
+
+            if (!isNull(id)) {
+                sql.append(" AND id = :id ");
+                parameters.put("id", id.toString());
+            }
+            if (!isNull(clientId)) {
+                sql.append(" AND client_id = :client_id ");
+                parameters.put("client_id", clientId);
+            }
+            if (!isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
+                sql.append(" AND order_date >= :dateTimeStart AND order_date < :dateTimeEnd ");
+                parameters.put("dateTimeStart", dateTimeStart);
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (!isBlank(status)) {
+                sql.append(" AND status = :status ");
+                parameters.put("status", status);
+            }
+
+            Query query = em.createNativeQuery(sql.toString());
+            setQueryParameters(parameters, query);
+
+            Object result = query.getSingleResult();
+            Number total = (Number) result;
+
+            return total.longValue();
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao contar total de pedidos filtrados.");
+        }
+    }
+
+    private void setQueryParameters(Map<String, Object> parameters, Query query) {
+        for (Map.Entry<String, Object> param : parameters.entrySet()) {
+            query.setParameter(param.getKey(), param.getValue());
         }
     }
 }

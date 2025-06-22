@@ -178,51 +178,55 @@ public class ProductRepository {
     public ProductPageDto findFilteredProducts(String name, String sku, Double minPrice,
                                                  Double maxPrice, Integer page, Integer linesPerPage,
                                                  String fixedDirection, String fixedOrderBy) {
+            List<ProductDto> products = queryFindFilteredProducts(name, sku, minPrice, maxPrice,
+                    page, linesPerPage, fixedDirection, fixedOrderBy);
 
-        try{
+            Long total = queryCountFilteredProducts(name, sku, minPrice, maxPrice);
+
+            ProductPageDto productPageDto = new ProductPageDto();
+            productPageDto.setProducts(products);
+            productPageDto.setTotal(total);
+
+            logFindFilteredProductsSuccessfully(name, sku, minPrice, maxPrice);
+            return productPageDto;
+    }
+
+    private List<ProductDto> queryFindFilteredProducts(String name, String sku, Double minPrice,
+                                                       Double maxPrice, Integer page, Integer linesPerPage,
+                                                       String fixedDirection, String fixedOrderBy) {
+        try {
             Map<String, Object> parameters = new HashMap<>();
-
-            StringBuilder sqlProducts = new StringBuilder();
-            sqlProducts.append(" SELECT name, sku, price, expiration_date FROM tb_products WHERE 1=1 ");
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT name, sku, price, expiration_date FROM tb_products WHERE 1=1 ");
 
             if (!isBlank(name)) {
-                sqlProducts.append(" AND name LIKE :name ");
+                sql.append(" AND name LIKE :name ");
                 parameters.put("name", "%" + name + "%");
             }
             if (!isBlank(sku)) {
-                sqlProducts.append(" AND sku = :sku ");
+                sql.append(" AND sku = :sku ");
                 parameters.put("sku", sku);
             }
             if (!isNull(minPrice)) {
-                sqlProducts.append(" AND price >= :minPrice ");
+                sql.append(" AND price >= :minPrice ");
                 parameters.put("minPrice", minPrice);
             }
             if (!isNull(maxPrice)) {
-                sqlProducts.append(" AND price <= :maxPrice ");
+                sql.append(" AND price <= :maxPrice ");
                 parameters.put("maxPrice", maxPrice);
             }
 
-            sqlProducts.append(" ORDER BY " + fixedOrderBy + " " + fixedDirection + " ");
-            sqlProducts.append(" LIMIT :limit OFFSET :offset ");
+            sql.append(" ORDER BY " + fixedOrderBy + " " + fixedDirection + " ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
 
-            Query queryProducts = em.createNativeQuery(sqlProducts.toString())
+            Query queryProducts = em.createNativeQuery(sql.toString())
                     .setParameter("limit", linesPerPage)
                     .setParameter("offset", page * linesPerPage);
-
-            StringBuilder sqlCount = countFilteredProducts(name, sku, minPrice, maxPrice);
-
-            Query queryCount = em.createNativeQuery(sqlCount.toString());
-
             setQueryParameters(queryProducts, parameters);
-            setQueryParameters(queryCount, parameters);
-
-            logInfoStartingFilteredProductsCountQuery(name, sku, minPrice, maxPrice);
-            Object countResult = queryCount.getSingleResult();
-            Number total = (Number) countResult;
 
             logInfoStartingProductsSearchQueryFiltered(name, sku, minPrice, maxPrice);
             List<Object[]> productResults = queryProducts.getResultList();
-            List<ProductDto> products  = new ArrayList<>();
+            List<ProductDto> products = new ArrayList<>();
 
             for (Object[] result : productResults) {
                 ProductDto productDto = new ProductDto();
@@ -234,43 +238,50 @@ public class ProductRepository {
                 products.add(productDto);
             }
 
-            ProductPageDto productPageDto = new ProductPageDto();
-            productPageDto.setProducts(products);
-            productPageDto.setTotal(total.longValue());
-
-            logFindFilteredProductsSuccessfully(name, sku, minPrice, maxPrice);
-            return productPageDto;
+            return products;
         } catch (Exception e) {
             logUnexpectedErrorOnFindFilteredProducts(e);
             throw new ClientErrorException("Erro ao buscar produtos filtrados.");
         }
     }
 
-    private StringBuilder countFilteredProducts(String name, String sku,
-                                          Double minPrice, Double maxPrice){
-        Map<String, Object> parameters = new HashMap<>();
-        StringBuilder sqlCount = new StringBuilder();
+    private Long queryCountFilteredProducts(String name, String sku,
+                                                     Double minPrice, Double maxPrice){
+        try {
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
 
-        sqlCount.append(" SELECT COUNT(*) FROM tb_products WHERE 1=1 ");
+            sql.append(" SELECT COUNT(*) FROM tb_products WHERE 1=1 ");
 
-        if (!isBlank(name)) {
-            sqlCount.append(" AND name LIKE :name ");
-            parameters.put("name", "%" + name + "%");
-        }
-        if (!isBlank(sku)) {
-            sqlCount.append(" AND sku = :sku ");
-            parameters.put("sku", sku);
-        }
-        if (!isNull(minPrice)) {
-            sqlCount.append(" AND price >= :minPrice ");
-            parameters.put("minPrice", minPrice);
-        }
-        if (!isNull(maxPrice)) {
-            sqlCount.append(" AND price <= :maxPrice ");
-            parameters.put("maxPrice", maxPrice);
-        }
+            if (!isBlank(name)) {
+                sql.append(" AND name LIKE :name ");
+                parameters.put("name", "%" + name + "%");
+            }
+            if (!isBlank(sku)) {
+                sql.append(" AND sku = :sku ");
+                parameters.put("sku", sku);
+            }
+            if (!isNull(minPrice)) {
+                sql.append(" AND price >= :minPrice ");
+                parameters.put("minPrice", minPrice);
+            }
+            if (!isNull(maxPrice)) {
+                sql.append(" AND price <= :maxPrice ");
+                parameters.put("maxPrice", maxPrice);
+            }
 
-        return sqlCount;
+            Query queryCount = em.createNativeQuery(sql.toString());
+            setQueryParameters(queryCount, parameters);
+
+            logInfoStartingFilteredProductsCountQuery(name, sku, minPrice, maxPrice);
+            Object countResult = queryCount.getSingleResult();
+            Number total = (Number) countResult;
+
+            return total.longValue();
+        } catch (Exception e) {
+            logUnexpectedErrorOnCountFilteredProducts(e);
+            throw new ClientErrorException("Erro ao contar produtos filtrados.");
+        }
 
     }
 

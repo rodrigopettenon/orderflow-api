@@ -15,6 +15,7 @@ import java.util.*;
 
 import static com.rodrigopettenon.cadastro_e_consulta.utils.LogUtil.*;
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Repository
 public class ClientRepository {
@@ -292,38 +293,62 @@ public class ClientRepository {
     }
 
 
-    public ClientPageDto findFilteredClients(String validatedNameFilter, String validatedEmailFilter,
-                                               String validatedCpfFilter, LocalDate birthStart, LocalDate birthEnd,
+    public ClientPageDto findFilteredClients(String name, String email,
+                                               String cpf, LocalDate birthStart, LocalDate birthEnd,
                                                Integer page, Integer linesPerPage,
-                                               String fixedDirection, String fixedOrderBy) {
-        try{
+                                               String direction, String orderBy) {
 
+            Long total = queryCountFilteredClients(name, email, cpf, birthStart, birthEnd);
+            List<ClientDto> clients = queryFindFilteredClients(name, email, cpf, birthStart,
+                    birthEnd, page, linesPerPage, direction, orderBy);
+
+            ClientPageDto clientPageDto = new ClientPageDto();
+            clientPageDto.setClients(clients);
+            clientPageDto.setTotal(total);
+
+            logFindFilteredClientsSuccessfully(name, email, cpf, birthStart, birthEnd);
+            return clientPageDto;
+    }
+
+    private List<ClientDto> queryFindFilteredClients(String name,
+                                                     String email, String cpf, LocalDate birthStart,
+                                                     LocalDate birthEnd, Integer page, Integer linesPerPage, String direction, String orderBy) {
+        try {
+            logInfoStartingClientsSearchQueryFiltered(name, email, cpf, birthStart, birthEnd);
             Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT name, email, cpf, birth_date FROM tb_clients WHERE 1=1 ");
 
-            StringBuilder sqlClients = buildClientQuery(parameters, validatedNameFilter,
-                    validatedEmailFilter, validatedCpfFilter,
-                    birthStart, birthEnd, fixedDirection, fixedOrderBy);
+            if (!isBlank(name)) {
+                sql.append(" AND name LIKE :name ");
+                parameters.put("name", "%" + name + "%");
+            }
 
-            StringBuilder sqlTotal = buildCountQuery(parameters, validatedNameFilter,
-                    validatedEmailFilter, validatedCpfFilter,
-                    birthStart, birthEnd);
+            if (!isBlank(email)) {
+                sql.append(" AND email LIKE :email ");
+                parameters.put("email", "%" + email + "%");
+            }
 
-            Query queryClients = em.createNativeQuery(sqlClients.toString())
+            if (!isBlank(cpf)) {
+                sql.append(" AND cpf = :cpf ");
+                parameters.put("cpf", cpf);
+            }
+            if (!isNull(birthStart) || !isNull(birthEnd)) {
+                sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
+                parameters.put("birthStart", birthStart);
+                parameters.put("birthEnd", birthEnd);
+            }
+
+            sql.append(" ORDER BY " + orderBy + " " + direction + " ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
                     .setParameter("limit", linesPerPage)
                     .setParameter("offset", page * linesPerPage);
+            setQueryParameters(query, parameters);
 
-            Query queryTotal = em.createNativeQuery(sqlTotal.toString());
-
-            setQueryParameters(queryClients, parameters);
-            setQueryParameters(queryTotal, parameters);
-
-            logInfoStartingClientsSearchQueryFiltered(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart, birthEnd);
-            List<Object[]> clientResults = queryClients.getResultList();
+            List<Object[]> clientResults = query.getResultList();
             List<ClientDto> clients = new ArrayList<>();
-
-            logInfoStartingFilteredClientCountQuery(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart, birthEnd);
-            Object totalResult = queryTotal.getSingleResult();
-            Number total = (Number) totalResult;
 
             for (Object[] result : clientResults) {
                 ClientDto clientDto = new ClientDto();
@@ -335,86 +360,59 @@ public class ClientRepository {
                 clients.add(clientDto);
             }
 
-            ClientPageDto clientPageDto = new ClientPageDto();
-            clientPageDto.setClients(clients);
-            clientPageDto.setTotal(total.longValue());
-
-            logFindFilteredClientsSuccessfully(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart, birthEnd);
-            return clientPageDto;
-
+            return clients;
         } catch (Exception e) {
             logUnexpectedErrorOnFindFilteredClients(e);
             throw new ClientErrorException("Erro ao buscar clientes filtrados.");
         }
     }
 
-    private void setQueryParameters (Query query, Map<String, Object> parameters) {
+    private Long queryCountFilteredClients(String name,
+                                                    String email, String cpf, LocalDate birthStart,
+                                                    LocalDate birthEnd) {
+        try {
+            logInfoStartingFilteredClientCountQuery(name, email, cpf, birthStart, birthEnd);
+
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT COUNT(*) FROM tb_clients WHERE 1=1 ");
+
+            if (!isNull(name)) {
+                sql.append(" AND name LIKE :name ");
+                parameters.put("name", "%" + name + "%");
+            }
+
+            if (!isNull(email)) {
+                sql.append(" AND email LIKE :email ");
+                parameters.put("email", "%" + email + "%");
+            }
+
+            if (!isNull(cpf)) {
+                sql.append(" AND cpf = :cpf ");
+                parameters.put("cpf", cpf);
+            }
+            if (!isNull(birthStart) || !isNull(birthEnd)) {
+                sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
+                parameters.put("birthStart", birthStart);
+                parameters.put("birthEnd", birthEnd);
+            }
+
+            Query query = em.createNativeQuery(sql.toString());
+            setQueryParameters(query, parameters);
+
+            Object totalResult = query.getSingleResult();
+            Number total = (Number) totalResult;
+
+            return total.longValue();
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao contar clientes filtrados.");
+        }
+
+    }
+
+    private void setQueryParameters(Query query, Map<String, Object> parameters) {
         for (Map.Entry<String, Object> param : parameters.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());
         }
-    }
-
-    private StringBuilder buildClientQuery(Map<String, Object> parameters, String name,
-                                          String email, String cpf, LocalDate birthStart,
-                                          LocalDate birthEnd, String direction, String orderBy) {
-
-        StringBuilder sql = new StringBuilder();
-        sql.append(" SELECT name, email, cpf, birth_date FROM tb_clients WHERE 1=1 ");
-
-        if (!isNull(name)) {
-            sql.append(" AND name LIKE :name ");
-            parameters.put("name", "%" + name + "%");
-        }
-
-        if (!isNull(email)) {
-            sql.append(" AND email LIKE :email ");
-            parameters.put("email", "%" + email + "%");
-        }
-
-        if (!isNull(cpf)) {
-            sql.append(" AND cpf = :cpf ");
-            parameters.put("cpf", cpf);
-        }
-        if (!isNull(birthStart) || !isNull(birthEnd)) {
-            sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
-            parameters.put("birthStart", birthStart);
-            parameters.put("birthEnd", birthEnd);
-        }
-
-        sql.append(" ORDER BY " + orderBy + " " + direction + " ");
-        sql.append(" LIMIT :limit OFFSET :offset ");
-
-        return sql;
-    }
-
-    private StringBuilder buildCountQuery (Map<String, Object> parameters, String name,
-                                          String email, String cpf, LocalDate birthStart,
-                                          LocalDate birthEnd) {
-
-        StringBuilder sql = new StringBuilder();
-        sql.append(" SELECT COUNT(*) FROM tb_clients WHERE 1=1 ");
-
-        if (!isNull(name)) {
-            sql.append(" AND name LIKE :name ");
-            parameters.put("name", "%" + name + "%");
-        }
-
-        if (!isNull(email)) {
-            sql.append(" AND email LIKE :email ");
-            parameters.put("email", "%" + email + "%");
-        }
-
-        if (!isNull(cpf)) {
-            sql.append(" AND cpf = :cpf ");
-            parameters.put("cpf", cpf);
-        }
-        if (!isNull(birthStart) || !isNull(birthEnd)) {
-            sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
-            parameters.put("birthStart", birthStart);
-            parameters.put("birthEnd", birthEnd);
-        }
-
-        return sql;
-
     }
 }

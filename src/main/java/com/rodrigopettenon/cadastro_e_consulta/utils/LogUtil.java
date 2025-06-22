@@ -294,9 +294,7 @@ public class LogUtil {
 
 
     //Clients
-    public static void logUnexpectedErrorOnFindFilteredProducts(Exception e) {
-        logUnexpectedError("buscar produtos filtrados", null, e);
-    }
+
 
     public static void logUnexpectedErrorOnFindAllClientsOrderBy(String orderBy, Exception e) {
         logUnexpectedError("buscar todos os clientes ordenados por", orderBy, e);
@@ -340,6 +338,12 @@ public class LogUtil {
 
 
     //Products
+    public static void logUnexpectedErrorOnCountFilteredProducts(Exception e) {
+        logUnexpectedError("contar produtos filtrados", null, e);
+    }
+    public static void logUnexpectedErrorOnFindFilteredProducts(Exception e) {
+        logUnexpectedError("buscar produtos filtrados", null, e);
+    }
     public static void logUnexpectedErrorOnSaveClientWithSku(String sku, Exception e) {
         logUnexpectedError("salvar produto de SKU", sku, e);
     }
