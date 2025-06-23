@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import static com.rodrigopettenon.cadastro_e_consulta.utils.LogUtil.*;
 import static com.rodrigopettenon.cadastro_e_consulta.utils.StringsValidation.removeAllSpaces;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -37,6 +38,7 @@ public class OrderService{
 
     @Transactional
     public OrderDto saveOrder(OrderDto orderDto) {
+        logSaveOrderStart();
         validateClientId(orderDto.getClientId());
         OrderStatus validatedOrderStatus = validateOrderStatus(orderDto.getStatus());
         orderDto.setOrderDate(LocalDateTime.now());
@@ -54,6 +56,8 @@ public class OrderService{
     public OrderPageDto findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
                                            LocalDateTime dateTimeEnd, String status, Integer page,
                                            Integer linesPerPage, String direction, String orderBy) {
+        logFindFilteredOrdersStart();
+
         Integer fixedPage = fixPageFilter(page);
         Integer fixedLinesPerPage = fixLinesPerPage(linesPerPage);
         String fixedDirection = fixDirectionFilter(direction);
@@ -68,13 +72,14 @@ public class OrderService{
     }
 
     public OrderDto findById(UUID id) {
+        logFindOrderByIdStart(id);
         validateOrderId(id);
 
         return orderRepository.findOrderById(id);
     }
 
     @Transactional
-    public void updateStatusById(UUID id, String status) {
+    public void updateOrderStatusById(UUID id, String status) {
         validateOrderId(id);
         OrderStatus newStatus = validateOrderStatus(status);
         validateNewStatusForUpdate(newStatus);
@@ -85,21 +90,25 @@ public class OrderService{
         validateCurrentStatusForUpdate(currentStatus);
 
         orderRepository.updateStatusById(id, newStatus);
+        logUpdateOrderStatusByIdSuccessfully(id);
     }
 
     private void validateCurrentStatusForUpdate(String currentStatus) {
+        logOrderCurrentStatusValidation(currentStatus);
         if (!"PENDING".equalsIgnoreCase(currentStatus)){
             throw new ClientErrorException("Não é possivel atualizar o status do pedido pois ele está: " + currentStatus);
         }
     }
 
     private void validateNewStatusForUpdate(OrderStatus newStatus) {
+        logOrderNewStatusValidation(newStatus);
         if (newStatus.toString().equals("PENDING")) {
             throw new ClientErrorException("O status do pedido já está PENDENTE.");
         }
     }
 
     private void validateClientId(Long clientId) {
+        logOrderClientIdValidation(clientId);
         if (isNull(clientId)) {
             throw new ClientErrorException("O id do cliente é obrigatório.");
         }
@@ -109,6 +118,7 @@ public class OrderService{
     }
 
     private OrderStatus validateOrderStatus(String status) {
+        logOrderStatusValidation(status);
         try{
             if (!isBlank(status)) {
                 String sanitizedStatus = removeAllSpaces(status.toUpperCase());
@@ -123,6 +133,7 @@ public class OrderService{
     }
 
     private void validateOrderId(UUID id) {
+        logOrderIdValidation(id);
         if (isNull(id)) {
             throw new ClientErrorException("O id do pedido é obrigatório.");
         }
@@ -138,18 +149,21 @@ public class OrderService{
      }
 
      private void validateFilterOrderId(UUID id) {
+        logFilterOrderIdValidation(id);
         if (!isNull(id)) {
             notExistsById(id);
         }
      }
 
      private void validateFilterClientId(Long clientId) {
+        logFilterOrderClientIdValidation(clientId);
         if(!isNull(clientId) && !clientRepository.existsClientById(clientId)) {
             throw new ClientErrorException("O id do cliente informado não está cadastrado.");
         }
      }
 
     private void validateFilterOrderDateTimeStart(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
+        logFilterOrderDateTimeStartValidation(dateTimeStart);
         if (!isNull(dateTimeStart) && isNull(dateTimeEnd)) {
             throw new ClientErrorException("Não é permitido preencher apenas data/hora ínicio.");
         }
@@ -164,6 +178,7 @@ public class OrderService{
     }
 
     private void validateFilterOrderDateTimeEnd(LocalDateTime dateTimeEnd, LocalDateTime dateTimeStart) {
+        logFilterOrderDateTimeEndValidation(dateTimeEnd);
         if (isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
             throw new ClientErrorException("Não é permitido preencher apenas data/hora final.");
         }
@@ -178,6 +193,7 @@ public class OrderService{
     }
 
     private void validateFilterOrderStatus(String status) {
+        logFilterOrderStatusValidation(status);
         try {
             if (!isBlank(status)) {
                 String sanitizedStatus = removeAllSpaces(status.toUpperCase());

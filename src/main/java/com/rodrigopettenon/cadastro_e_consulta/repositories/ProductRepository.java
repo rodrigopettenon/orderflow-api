@@ -87,6 +87,7 @@ public class ProductRepository {
             return products;
 
         } catch (Exception e) {
+            logUnexpectedErrorOnFindAllProducts(e);
             throw new ClientErrorException("Erro ao buscar todos produtos.");
         }
 
@@ -171,6 +172,7 @@ public class ProductRepository {
 
             return total.longValue();
         } catch (Exception e) {
+            logUnexpectedErrorOnCountAllProducts(e);
             throw new ClientErrorException("Erro ao contar todos produtos.");
         }
     }

@@ -405,6 +405,7 @@ public class ClientRepository {
 
             return total.longValue();
         } catch (Exception e) {
+            logUnexpectedErrorOnCountFilteredClients(e);
             throw new ClientErrorException("Erro ao contar clientes filtrados.");
         }
 

@@ -1,9 +1,12 @@
 package com.rodrigopettenon.cadastro_e_consulta.utils;
 
+import com.rodrigopettenon.cadastro_e_consulta.models.OrderStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class LogUtil {
 
@@ -89,6 +92,45 @@ public class LogUtil {
         logValidation("data de vencimento", expiration);
     }
 
+    //Orders
+    public static void logOrderCurrentStatusValidation(String status) {
+        logValidation("status atual do pedido", status);
+    }
+
+    public static void logOrderNewStatusValidation(OrderStatus status) {
+        logValidation("novo status do pedido", status.toString());
+    }
+
+    public static void logOrderClientIdValidation(Long id) {
+        logValidation("id do cliente do pedido", id);
+    }
+
+    public static void logOrderStatusValidation(String status) {
+        logValidation("status do pedido", status);
+    }
+
+    public static void logOrderIdValidation(UUID id) {
+        logValidation("id do pedido", id);
+    }
+    public static void logFilterOrderIdValidation(UUID id) {
+        logFilterValidation("id do pedido", id);
+    }
+
+    public static void logFilterOrderClientIdValidation(Long id) {
+        logFilterValidation("id do cliente do pedido", id);
+    }
+
+    public static void logFilterOrderDateTimeStartValidation(LocalDateTime dateTimeStart) {
+        logFilterValidation("data de inicio do pedido", dateTimeStart);
+    }
+
+    public static void logFilterOrderDateTimeEndValidation(LocalDateTime dateTimeEnd) {
+        logFilterValidation("data final do pedido", dateTimeEnd);
+    }
+
+    public static void logFilterOrderStatusValidation(String status) {
+        logFilterValidation("status do pedido", status);
+    }
 
     // LOGS DE INICIOS
 
@@ -151,6 +193,19 @@ public class LogUtil {
 
     public static void logProductDeletionBySkuStart(String sku) {
         logStartOfProcess("deleção do produto pelo SKU", sku);
+    }
+
+    //Orders
+    public static void logSaveOrderStart() {
+        logStartOfProcess("salvamento de um novo pedido", null);
+    }
+
+    public static void logFindFilteredOrdersStart() {
+        logStartOfProcess("busca de pedidos filtrados", null);
+    }
+
+    public static void logFindOrderByIdStart(UUID id) {
+        logStartOfProcess("busca de pedido pelo id", id);
     }
 
     //LOGS DE INFO
@@ -224,6 +279,11 @@ public class LogUtil {
 
     public static void logClientDeletedByCpfSuccessfully(String cpf) {
         logSuccessfully("deletar cliente pelo CPF", cpf);
+    }
+
+    //Orders
+    public static void logUpdateOrderStatusByIdSuccessfully(UUID id) {
+        logSuccessfully("atualizar status do pedido pelo id", id);
     }
 
 
@@ -308,6 +368,10 @@ public class LogUtil {
         logUnexpectedError("buscar por clientes filtrados", null, e);
     }
 
+    public static void logUnexpectedErrorOnCountFilteredClients(Exception e) {
+        logUnexpectedError("contar clientes filtrados", null, e);
+    }
+
     public static void logUnexpectedErrorOnFindClientByCpf(String cpf, Exception e) {
         logUnexpectedError("buscar cliente pelo CPF", cpf, e);
     }
@@ -343,6 +407,14 @@ public class LogUtil {
     }
     public static void logUnexpectedErrorOnFindFilteredProducts(Exception e) {
         logUnexpectedError("buscar produtos filtrados", null, e);
+    }
+
+    public static void logUnexpectedErrorOnFindAllProducts(Exception e) {
+        logUnexpectedError("buscar todos produtos", null, e);
+    }
+
+    public static void logUnexpectedErrorOnCountAllProducts(Exception e) {
+        logUnexpectedError("contar todos produtos",null, e);
     }
     public static void logUnexpectedErrorOnSaveClientWithSku(String sku, Exception e) {
         logUnexpectedError("salvar produto de SKU", sku, e);
