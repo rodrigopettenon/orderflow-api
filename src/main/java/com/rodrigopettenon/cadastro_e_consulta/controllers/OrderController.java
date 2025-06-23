@@ -42,4 +42,10 @@ public class OrderController extends BaseController{
         return createObjectReturn(orderService.findById(id));
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<?> updateStatusById(@RequestParam UUID id, @RequestParam String status) {
+        orderService.updateStatusById(id, status);
+        return createObjectReturn("Status do pedido atualizado com sucesso.");
+    }
+
 }

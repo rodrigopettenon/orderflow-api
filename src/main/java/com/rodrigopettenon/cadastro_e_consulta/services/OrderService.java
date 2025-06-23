@@ -67,6 +67,38 @@ public class OrderService{
         return orderRepository.findFilteredOrders(id, clientId, dateTimeStart, dateTimeEnd, status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
+    public OrderDto findById(UUID id) {
+        validateOrderId(id);
+
+        return orderRepository.findOrderById(id);
+    }
+
+    @Transactional
+    public void updateStatusById(UUID id, String status) {
+        validateOrderId(id);
+        OrderStatus newStatus = validateOrderStatus(status);
+        validateNewStatusForUpdate(newStatus);
+
+        OrderDto orderDto = orderRepository.findOrderById(id);
+        String currentStatus = orderDto.getStatus().toUpperCase();
+
+        validateCurrentStatusForUpdate(currentStatus);
+
+        orderRepository.updateStatusById(id, newStatus);
+    }
+
+    private void validateCurrentStatusForUpdate(String currentStatus) {
+        if (!"PENDING".equalsIgnoreCase(currentStatus)){
+            throw new ClientErrorException("Não é possivel atualizar o status do pedido pois ele está: " + currentStatus);
+        }
+    }
+
+    private void validateNewStatusForUpdate(OrderStatus newStatus) {
+        if (newStatus.toString().equals("PENDING")) {
+            throw new ClientErrorException("O status do pedido já está PENDENTE.");
+        }
+    }
+
     private void validateClientId(Long clientId) {
         if (isNull(clientId)) {
             throw new ClientErrorException("O id do cliente é obrigatório.");
@@ -90,13 +122,7 @@ public class OrderService{
         }
     }
 
-    public OrderDto findById(UUID id) {
-        validateId(id);
-
-        return orderRepository.findOrderById(id);
-    }
-
-    private void validateId(UUID id) {
+    private void validateOrderId(UUID id) {
         if (isNull(id)) {
             throw new ClientErrorException("O id do pedido é obrigatório.");
         }
@@ -189,6 +215,4 @@ public class OrderService{
         }
         return orderBy;
     }
-
-
 }

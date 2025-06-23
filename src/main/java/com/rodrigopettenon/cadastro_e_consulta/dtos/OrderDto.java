@@ -1,12 +1,14 @@
 package com.rodrigopettenon.cadastro_e_consulta.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderStatus;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderDto implements Serializable {
 
     private static final long serialVersionUID = -7732423783020372412L;

@@ -4,6 +4,7 @@ import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderModel;
+import com.rodrigopettenon.cadastro_e_consulta.models.OrderStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -51,6 +52,20 @@ public class OrderRepository {
         }
     }
 
+    public void updateStatusById(UUID id, OrderStatus newStatus) {
+        try {
+            String sql = (" UPDATE tb_orders SET status = :newStatus WHERE id = :id ");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("newStatus", newStatus)
+                    .setParameter("id", id.toString());
+
+            query.executeUpdate();
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao atualizar o status do pedido pelo id.");
+        }
+    }
+
     public OrderDto findOrderById(UUID id) {
         try {
             String sql = (" SELECT id, client_id, order_date, status FROM tb_orders WHERE id = :id LIMIT 1 ");
@@ -59,6 +74,11 @@ public class OrderRepository {
                     .setParameter("id", id.toString());
 
             List<Object[]> resultList = query.getResultList();
+
+            if (resultList.isEmpty()) {
+                throw new ClientErrorException("Pedido não encontrado com o id informado.");
+            }
+
             Object[] result = resultList.get(0);
 
             OrderDto orderDto = new OrderDto();
@@ -199,4 +219,5 @@ public class OrderRepository {
             query.setParameter(param.getKey(), param.getValue());
         }
     }
+
 }
