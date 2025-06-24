@@ -239,16 +239,21 @@ public class LogUtil {
     //LOGS DE SUCESSOS
 
     //Genérico
+
     private static void logSuccessfully(String action, Object value) {
         logger.info("[SUCESSO] Sucesso ao {}: {}", action, value );
     }
 
-    private static void logSuccessfully(String action, Object name, Object email, Object cpf, LocalDate birthStart, LocalDate birthEnd) {
+    private static void logSuccessfully(String action, String name, String email, String cpf, LocalDate birthStart, LocalDate birthEnd) {
         logger.info("[SUCESSO] Sucesso ao {}: name={}, email={}, cpf={}, birthStart={}, birthEnd={}",action, name, email, cpf, birthStart, birthEnd);
     }
 
-    private static void logSuccessfully(String action, Object name, Object sku, Object minPrice, Object maxPrice) {
+    private static void logSuccessfully(String action, String name, String sku, Double minPrice, Double maxPrice) {
         logger.info("[SUCESSO] Sucesso ao {}: name={}, sku={}, minPrice={}, maxPrice={}",action, name, sku, minPrice, maxPrice);
+    }
+
+    private static void logSuccessfully(String action, UUID id, Long clientId, LocalDateTime orderDate, String status) {
+        logger.info("[SUCESSO] Sucesso ao {}: name={}, sku={}, minPrice={}, maxPrice={}",action, id, clientId, orderDate, status);
     }
 
 
@@ -284,6 +289,26 @@ public class LogUtil {
     //Orders
     public static void logUpdateOrderStatusByIdSuccessfully(UUID id) {
         logSuccessfully("atualizar status do pedido pelo id", id);
+    }
+
+    public static void logSaveOrderSuccessfully(UUID id, Long clientId, LocalDateTime orderDate, String status) {
+        logSuccessfully("ao salvar um novo pedido", id, clientId, orderDate, status);
+    }
+
+    public static void logFindOrderByIdSuccessfully(UUID id) {
+        logSuccessfully("encontrar pedido pelo ID", id);
+    }
+
+    public static void logCheckingExistenceOfOrderByIdSuccessfully(UUID id) {
+        logSuccessfully("verificar existencia do pedido pelo id", id);
+    }
+
+    public static void logFindFilteredOrdersSuccessfully() {
+        logSuccessfully("buscar por pedidos filtrados", null);
+    }
+
+    public static void logCountFilteredOrdersSuccessfully() {
+        logSuccessfully("contar pedidos filtrados", null);
     }
 
 
@@ -348,7 +373,7 @@ public class LogUtil {
     //LOGS DE ERROS
 
     //Genérico
-    private static void logUnexpectedError(String action, String identifier, Exception e) {
+    private static void logUnexpectedError(String action, Object identifier, Exception e) {
         logger.error("[ERRO] Erro inesperado ao {} {}: {}", action, identifier, e.getMessage(), e);
     }
 
@@ -433,5 +458,30 @@ public class LogUtil {
 
     public static void logUnexpectedErrorOnDeleteProductBySku(String sku, Exception e ) {
         logUnexpectedError("realizar deleção do produto pelo SKU", sku, e);
+    }
+
+    //Orders
+    public static void logUnexpectedErrorOnSaveOrder(Exception e) {
+        logUnexpectedError("salvar um novo pedido",null, e);
+    }
+
+    public static void logUnexpectedErrorOnUpdateOrderStatusById(UUID id, Exception e) {
+        logUnexpectedError("atualizar um pedido pelo ID", id, e);
+    }
+
+    public static void  logUnexpectedErrorOnFindOrderById(UUID id, Exception e) {
+        logUnexpectedError("buscar um pedido pelo ID", id, e);
+    }
+
+    public static void logUnexpectedErrorCheckingExistenceOfOrderById(UUID id, Exception e) {
+        logUnexpectedError("verificar existência do pedido pelo ID", id, e);
+    }
+
+    public static void logUnexpectedErrorOnFindFilteredOrders(Exception e) {
+        logUnexpectedError("buscar pedidos filtrados", null, e);
+    }
+
+    public static void logUnexpectedErrorOnCountFilteredOrders(Exception e) {
+        logUnexpectedError("contar pedidos filtrados", null, e);
     }
 }

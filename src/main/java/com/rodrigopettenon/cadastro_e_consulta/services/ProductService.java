@@ -44,7 +44,7 @@ public class ProductService {
     public ProductPageDto findAllProducts(Integer page, Integer linesPerPage, String direction, String orderBy) {
 
         Integer sanitizedPage = sanitizePage(page);
-        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(page);
+        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
 
         String fixedDirection = fixDirection(ALLOWED_DIRECTION, direction);
         String fixedOrderBy = fixOrderBy(ALLOWED_ORDER_BY, orderBy);

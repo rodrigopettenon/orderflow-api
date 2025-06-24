@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.rodrigopettenon.cadastro_e_consulta.utils.LogUtil.*;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -45,9 +46,10 @@ public class OrderRepository {
             newOrder.setOrderDate(orderModel.getOrderDate());
             newOrder.setStatus(orderModel.getStatus().toString());
 
+            logSaveOrderSuccessfully(id, newOrder.getClientId(), newOrder.getOrderDate(), newOrder.getStatus());
             return newOrder;
-
         }catch (Exception e) {
+            logUnexpectedErrorOnSaveOrder(e);
             throw new ClientErrorException("Erro ao cadastrar pedido");
         }
     }
@@ -62,6 +64,7 @@ public class OrderRepository {
 
             query.executeUpdate();
         } catch (Exception e) {
+            logUnexpectedErrorOnUpdateOrderStatusById(id, e);
             throw new ClientErrorException("Erro ao atualizar o status do pedido pelo id.");
         }
     }
@@ -87,9 +90,10 @@ public class OrderRepository {
             orderDto.setOrderDate(((Timestamp) result[2]).toLocalDateTime());
             orderDto.setStatus((String) result[3]);
 
+            logFindOrderByIdSuccessfully(id);
             return orderDto;
-
         } catch (Exception e) {
+            logUnexpectedErrorOnFindOrderById(id, e);
             throw new ClientErrorException("Erro ao buscar pedido pelo id");
         }
     }
@@ -103,8 +107,10 @@ public class OrderRepository {
 
             List<?> resultList = query.getResultList();
 
+            logCheckingExistenceOfOrderByIdSuccessfully(id);
             return !resultList.isEmpty();
         } catch (Exception e) {
+            logUnexpectedErrorCheckingExistenceOfOrderById(id, e);
             throw new ClientErrorException("Erro ao verificar existencia pelo id: " + id);
         }
     }
@@ -170,8 +176,11 @@ public class OrderRepository {
 
                 results.add(orderDto);
             }
+
+            logFindFilteredOrdersSuccessfully();
             return results;
         } catch (Exception e) {
+            logUnexpectedErrorOnFindFilteredOrders(e);
             throw new ClientErrorException("Erro ao buscar pedidos filtrados.");
         }
 
@@ -208,8 +217,10 @@ public class OrderRepository {
             Object result = query.getSingleResult();
             Number total = (Number) result;
 
+            logCountFilteredOrdersSuccessfully();
             return total.longValue();
         } catch (Exception e) {
+            logUnexpectedErrorOnCountFilteredOrders(e);
             throw new ClientErrorException("Erro ao contar total de pedidos filtrados.");
         }
     }

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_order")
+@Table(name = "tb_orders")
 public class OrderModel implements Serializable {
 
     private static final long serialVersionUID = 5599509190775542297L;
