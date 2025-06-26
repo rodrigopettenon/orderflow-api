@@ -3,6 +3,7 @@ package com.rodrigopettenon.cadastro_e_consulta.repositories;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
+import com.rodrigopettenon.cadastro_e_consulta.models.ProductModel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -56,7 +57,23 @@ public class ProductRepository {
 
         } catch (Exception e) {
             logUnexpectedErrorCheckingProductExistenceBySku(sku, e);
-            throw new ClientErrorException("Erro ao verificar existência do SKU.");
+            throw new ClientErrorException("Erro ao verificar existência do produto pelo SKU.");
+        }
+    }
+
+    public Boolean existsProductById(UUID id) {
+        try{
+            String sql = " SELECT 1 FROM tb_products WHERE id = :id LIMIT 1 ";
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id.toString());
+
+            List<?> result = query.getResultList();
+
+            return !result.isEmpty();
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao verificar existência do produto pelo id.");
         }
     }
 
@@ -91,6 +108,35 @@ public class ProductRepository {
             throw new ClientErrorException("Erro ao buscar todos produtos.");
         }
 
+    }
+
+    public ProductModel findProductModelById(UUID id) {
+        try{
+            String sql = (" SELECT id, name, sku, price, expiration_date FROM tb_products WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id.toString());
+
+            List<Object[]> resultList = query.getResultList();
+
+            if (resultList.isEmpty()) {
+                throw new ClientErrorException("Produto não encontrado pelo id: " + id);
+            }
+
+            Object[] result = resultList.get(0);
+            ProductModel productModel = new ProductModel();
+
+            productModel.setId(UUID.fromString((String) result[0]));
+            productModel.setName((String) result[1]);
+            productModel.setSku((String) result[2]);
+            productModel.setPrice(((Number) result[3]).doubleValue());
+            productModel.setExpiration(((Date) result[4]).toLocalDate());
+
+            return productModel;
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar produto pelo id.");
+        }
     }
 
     public ProductDto findProductBySku(String sku) {

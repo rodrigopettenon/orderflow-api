@@ -3,6 +3,7 @@ package com.rodrigopettenon.cadastro_e_consulta.repositories;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
+import com.rodrigopettenon.cadastro_e_consulta.models.ClientModel;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderModel;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderStatus;
 import jakarta.persistence.EntityManager;
@@ -10,6 +11,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -95,6 +97,65 @@ public class OrderRepository {
         } catch (Exception e) {
             logUnexpectedErrorOnFindOrderById(id, e);
             throw new ClientErrorException("Erro ao buscar pedido pelo id");
+        }
+    }
+
+    public OrderModel findOrderModelById(UUID id) {
+        try {
+            String sql = (" SELECT id, client_id, order_date, status FROM tb_orders WHERE id = :id LIMIT 1 ");
+
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id.toString());
+
+            List<Object[]> resultList = query.getResultList();
+
+            if (resultList.isEmpty()) {
+                throw new ClientErrorException("Pedido não encontrado com o id informado.");
+            }
+
+            Object[] result = resultList.get(0);
+
+            ClientModel clientModelFound = findClientModelByOrderId(id);
+
+            OrderModel orderModelFound = new OrderModel();
+            orderModelFound.setId(UUID.fromString((String) result[0]));
+            orderModelFound.setClient(clientModelFound);
+            orderModelFound.setOrderDate(((Timestamp) result[2]).toLocalDateTime());
+            orderModelFound.setStatus(OrderStatus.valueOf(((String) result[3])));
+            return orderModelFound;
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar o pedido pelo id.");
+        }
+    }
+
+    private ClientModel findClientModelByOrderId(UUID id) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT c.id, c.name, c.email, c.cpf, c.birth_date ");
+            sql.append(" FROM tb_orders o JOIN tb_clients c ");
+            sql.append(" ON o.client_id = c.id ");
+            sql.append(" WHERE o.id = :id ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("id", id.toString());
+
+            List<Object[]> resultList = query.getResultList();
+
+            if (resultList.isEmpty()) {
+                throw new ClientErrorException("Não foi encontrado nenhum cliente vinculado ao pedido com o id informado.");
+            }
+
+            Object[] result = resultList.get(0);
+            ClientModel clientModelFound = new ClientModel();
+            clientModelFound.setId(((Number) result[0]).longValue());
+            clientModelFound.setName((String) result[1]);
+            clientModelFound.setEmail((String) result[2]);
+            clientModelFound.setCpf((String) result[3]);
+            clientModelFound.setBirth(((Date) result[4]).toLocalDate());
+
+            return clientModelFound;
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar cliente pelo id do pedido.");
         }
     }
 
