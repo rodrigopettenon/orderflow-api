@@ -1,7 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.services;
 
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderDto;
-import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderPageDto;
+import com.rodrigopettenon.cadastro_e_consulta.dtos.GlobalPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.models.ClientModel;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderModel;
@@ -53,9 +53,9 @@ public class OrderService{
         return orderRepository.saveOrder(orderModel);
     }
 
-    public OrderPageDto findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
-                                           LocalDateTime dateTimeEnd, String status, Integer page,
-                                           Integer linesPerPage, String direction, String orderBy) {
+    public GlobalPageDto<OrderDto> findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
+                                            LocalDateTime dateTimeEnd, String status, Integer page,
+                                            Integer linesPerPage, String direction, String orderBy) {
         logFindFilteredOrdersStart();
 
         Integer fixedPage = fixPageFilter(page);

@@ -1,7 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.services;
 
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientDto;
-import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientPageDto;
+import com.rodrigopettenon.cadastro_e_consulta.dtos.GlobalPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.repositories.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class ClientService {
         logClientSavedWithCpfSuccessfully(cpf);
     }
 
-    public ClientPageDto findAllClients(Integer page, Integer linesPerPage, String direction, String orderBy) {
+    public GlobalPageDto<ClientDto> findAllClients(Integer page, Integer linesPerPage, String direction, String orderBy) {
         logFindAllClientsStart();
         Integer sanitizedPage = sanitizePage(page);
         Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
@@ -57,15 +57,15 @@ public class ClientService {
         List<ClientDto> clients = clientRepository.findAllClients(sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
         Long total = clientRepository.countTotalClients();
 
-        ClientPageDto clientPageDto = new ClientPageDto();
-        clientPageDto.setClients(clients);
+        GlobalPageDto<ClientDto> clientPageDto = new GlobalPageDto<>();
+        clientPageDto.setItems(clients);
         clientPageDto.setTotal(total);
 
         logFindAllClientsSuccessfully();
         return clientPageDto;
     }
 
-    public ClientPageDto findFilteredClients(String name, String email,
+    public GlobalPageDto<ClientDto> findFilteredClients(String name, String email,
                                              String cpf, LocalDate birthStart,
                                              LocalDate birthEnd, Integer page,
                                              Integer linesPerPage, String direction,

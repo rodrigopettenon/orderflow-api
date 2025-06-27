@@ -1,7 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.repositories;
 
 import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderDto;
-import com.rodrigopettenon.cadastro_e_consulta.dtos.OrderPageDto;
+import com.rodrigopettenon.cadastro_e_consulta.dtos.GlobalPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.models.ClientModel;
 import com.rodrigopettenon.cadastro_e_consulta.models.OrderModel;
@@ -176,18 +176,18 @@ public class OrderRepository {
         }
     }
 
-    public OrderPageDto findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
-                                       LocalDateTime dateTimeEnd, String status, Integer page,
-                                       Integer linesPerPage, String direction, String orderBy) {
+    public GlobalPageDto<OrderDto> findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
+                                            LocalDateTime dateTimeEnd, String status, Integer page,
+                                            Integer linesPerPage, String direction, String orderBy) {
 
             Long total = queryCountTotalFiltered(id, clientId, dateTimeStart, dateTimeEnd, status);
 
             List<OrderDto> results = queryFindFilteredOrders(id, clientId, dateTimeStart,
                     dateTimeEnd, status, page, linesPerPage, direction, orderBy);
 
-            OrderPageDto orderPageDto = new OrderPageDto();
+            GlobalPageDto<OrderDto> orderPageDto = new GlobalPageDto<>();
             orderPageDto.setTotal(total);
-            orderPageDto.setOrders(results);
+            orderPageDto.setItems(results);
 
             return orderPageDto;
     }

@@ -1,7 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.repositories;
 
+import com.rodrigopettenon.cadastro_e_consulta.dtos.GlobalPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductDto;
-import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.models.ProductModel;
 import jakarta.persistence.EntityManager;
@@ -223,16 +223,16 @@ public class ProductRepository {
         }
     }
 
-    public ProductPageDto findFilteredProducts(String name, String sku, Double minPrice,
-                                                 Double maxPrice, Integer page, Integer linesPerPage,
-                                                 String fixedDirection, String fixedOrderBy) {
+    public GlobalPageDto<ProductDto> findFilteredProducts(String name, String sku, Double minPrice,
+                                              Double maxPrice, Integer page, Integer linesPerPage,
+                                              String fixedDirection, String fixedOrderBy) {
             List<ProductDto> products = queryFindFilteredProducts(name, sku, minPrice, maxPrice,
                     page, linesPerPage, fixedDirection, fixedOrderBy);
 
             Long total = queryCountFilteredProducts(name, sku, minPrice, maxPrice);
 
-            ProductPageDto productPageDto = new ProductPageDto();
-            productPageDto.setProducts(products);
+            GlobalPageDto<ProductDto> productPageDto = new GlobalPageDto<>();
+            productPageDto.setItems(products);
             productPageDto.setTotal(total);
 
             logFindFilteredProductsSuccessfully(name, sku, minPrice, maxPrice);

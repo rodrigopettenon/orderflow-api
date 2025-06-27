@@ -1,7 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.services;
 
+import com.rodrigopettenon.cadastro_e_consulta.dtos.GlobalPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductDto;
-import com.rodrigopettenon.cadastro_e_consulta.dtos.ProductPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,32 +41,32 @@ public class ProductService {
         logProductSavedWithSkuSuccessfully(productDto.getSku());
     }
 
-    public ProductPageDto findAllProducts(Integer page, Integer linesPerPage, String direction, String orderBy) {
+    public GlobalPageDto<ProductDto> findAllProducts(Integer page, Integer linesPerPage, String direction, String orderBy) {
 
         Integer sanitizedPage = sanitizePage(page);
         Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
 
-        String fixedDirection = fixDirection(ALLOWED_DIRECTION, direction);
-        String fixedOrderBy = fixOrderBy(ALLOWED_ORDER_BY, orderBy);
+        String fixedDirection = fixDirection(direction);
+        String fixedOrderBy = fixOrderBy(orderBy);
 
         Long total = productRepository.countAllProducts();
         List<ProductDto> products = productRepository.findAllProducts(sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
 
-        ProductPageDto productPageDto = new ProductPageDto();
+        GlobalPageDto<ProductDto> productPageDto = new GlobalPageDto<>();
         productPageDto.setTotal(total);
-        productPageDto.setProducts(products);
+        productPageDto.setItems(products);
 
         return productPageDto;
     }
 
-    public ProductPageDto findFilteredProducts(String name, String sku, Double minPrice,
+    public GlobalPageDto<ProductDto> findFilteredProducts(String name, String sku, Double minPrice,
                                        Double maxPrice, Integer page, Integer linesPerPage,
                                        String direction, String orderBy) {
         Integer sanitizedPage = sanitizePage(page);
         Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
 
-        String fixedDirection = fixDirection(ALLOWED_DIRECTION, direction);
-        String fixedOrderBy = fixOrderBy(ALLOWED_ORDER_BY, orderBy);
+        String fixedDirection = fixDirection(direction);
+        String fixedOrderBy = fixOrderBy(orderBy);
 
         String sanitizedName = sanitizeNameFilter(name);
         String sanitizedSku = validateSkuFilter(sku);
@@ -174,15 +174,15 @@ public class ProductService {
         return linesPerPage;
     }
 
-    private String fixDirection(List<String> directionAllowed, String direction) {
-        if (isBlank(direction) || !directionAllowed.contains(direction.toLowerCase())) {
+    private String fixDirection(String direction) {
+        if (isBlank(direction) || !ALLOWED_DIRECTION.contains(direction.toLowerCase())) {
             return "asc";
         }
         return direction;
     }
 
-    private String fixOrderBy(List<String> orderByAllowed, String orderBy) {
-        if (isBlank(orderBy) || !orderByAllowed.contains(orderBy.toLowerCase())) {
+    private String fixOrderBy(String orderBy) {
+        if (isBlank(orderBy) || !ALLOWED_ORDER_BY.contains(orderBy.toLowerCase())) {
             return "name";
         }
         return orderBy;

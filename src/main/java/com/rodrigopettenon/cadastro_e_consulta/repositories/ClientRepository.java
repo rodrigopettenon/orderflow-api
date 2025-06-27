@@ -1,7 +1,7 @@
 package com.rodrigopettenon.cadastro_e_consulta.repositories;
 
 import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientDto;
-import com.rodrigopettenon.cadastro_e_consulta.dtos.ClientPageDto;
+import com.rodrigopettenon.cadastro_e_consulta.dtos.GlobalPageDto;
 import com.rodrigopettenon.cadastro_e_consulta.exceptions.ClientErrorException;
 import com.rodrigopettenon.cadastro_e_consulta.models.ClientModel;
 import jakarta.persistence.EntityManager;
@@ -293,17 +293,17 @@ public class ClientRepository {
     }
 
 
-    public ClientPageDto findFilteredClients(String name, String email,
-                                               String cpf, LocalDate birthStart, LocalDate birthEnd,
-                                               Integer page, Integer linesPerPage,
-                                               String direction, String orderBy) {
+    public GlobalPageDto<ClientDto> findFilteredClients(String name, String email,
+                                             String cpf, LocalDate birthStart, LocalDate birthEnd,
+                                             Integer page, Integer linesPerPage,
+                                             String direction, String orderBy) {
 
             Long total = queryCountFilteredClients(name, email, cpf, birthStart, birthEnd);
             List<ClientDto> clients = queryFindFilteredClients(name, email, cpf, birthStart,
                     birthEnd, page, linesPerPage, direction, orderBy);
 
-            ClientPageDto clientPageDto = new ClientPageDto();
-            clientPageDto.setClients(clients);
+            GlobalPageDto<ClientDto> clientPageDto = new GlobalPageDto<>();
+            clientPageDto.setItems(clients);
             clientPageDto.setTotal(total);
 
             logFindFilteredClientsSuccessfully(name, email, cpf, birthStart, birthEnd);
