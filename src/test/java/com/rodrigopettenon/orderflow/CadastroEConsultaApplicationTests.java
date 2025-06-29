@@ -1,0 +1,13 @@
+package com.rodrigopettenon.orderflow;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class CadastroEConsultaApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
