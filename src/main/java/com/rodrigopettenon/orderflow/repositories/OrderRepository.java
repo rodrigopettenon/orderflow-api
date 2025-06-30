@@ -1,7 +1,6 @@
 package com.rodrigopettenon.orderflow.repositories;
 
-import com.rodrigopettenon.orderflow.dtos.OrderDto;
-import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
+import com.rodrigopettenon.orderflow.dtos.*;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
 import com.rodrigopettenon.orderflow.models.OrderModel;
@@ -301,10 +300,167 @@ public class OrderRepository {
         }
     }
 
+    public GlobalPageDto<GlobalFullDetailsDto> findFilteredOrderDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
+                                                                        LocalDateTime dateTimeEnd, Integer minQuantity, Integer maxQuantity,
+                                                                        String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
+
+        Long total = queryCountFilteredOrderDetails(orderId, clientId, dateTimeStart, dateTimeEnd, minQuantity,
+                maxQuantity, status);
+
+        List<GlobalFullDetailsDto> ordersDetailsList = queryFindFilteredOrderDetails(orderId, clientId, dateTimeStart, dateTimeEnd, minQuantity,
+                maxQuantity, status, page, linesPerPage, direction, orderBy);
+
+        GlobalPageDto<GlobalFullDetailsDto> ordersDetailsPage = new GlobalPageDto<>();
+        ordersDetailsPage.setTotal(total);
+        ordersDetailsPage.setItems(ordersDetailsList);
+
+        return ordersDetailsPage;
+    }
+
+    private Long queryCountFilteredOrderDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
+                                                LocalDateTime dateTimeEnd, Integer minQuantity, Integer maxQuantity, String status) {
+        try{
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT COUNT(*) ");
+            sql.append(" FROM tb_orders o JOIN tb_item_orders i JOIN tb_clients c ");
+            sql.append(" ON i.order_id = o.id AND o.client_id = c.id ");
+            sql.append(" WHERE 1=1 ");
+
+            if (!isNull(orderId)) {
+                sql.append(" AND o.id = :orderId ");
+                parameters.put("orderId", orderId.toString());
+            }
+            if (!isNull(clientId)) {
+                sql.append(" AND c.id = :clientId ");
+                parameters.put("clientId", clientId);
+            }
+            if (!isNull(status)) {
+                sql.append(" AND o.status = :status ");
+                parameters.put("status", status);
+            }
+            if (!isNull(dateTimeStart)) {
+                sql.append(" AND o.order_date >= :dateTimeStart ");
+                parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (!isNull(dateTimeEnd)) {
+                sql.append(" AND o.order_date <= :dateTimeEnd ");
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (!isNull(minQuantity)) {
+                sql.append(" AND i.quantity >= :minQuantity ");
+                parameters.put("minQuantity", minQuantity);
+            }
+            if (!isNull(maxQuantity)) {
+                sql.append(" AND i.quantity <= :maxQuantity ");
+                parameters.put("maxQuantity", maxQuantity);
+            }
+
+            Query query = em.createNativeQuery(sql.toString());
+
+            setQueryParameters(parameters, query);
+
+            Object result = query.getSingleResult();
+            Number total = (Number) result;
+
+            return total.longValue();
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao contar pedidos com detalhes filtrados.");
+        }
+    }
+
+    private List<GlobalFullDetailsDto> queryFindFilteredOrderDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
+                                                                     LocalDateTime dateTimeEnd, Integer minQuantity, Integer maxQuantity,
+                                                                     String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
+        try {
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT o.id, o.order_date, o.status, ");
+            sql.append(" c.id, c.name, c.email, ");
+            sql.append(" i.quantity, ROUND(i.price * i.quantity, 2) total_price ");
+            sql.append(" FROM tb_orders o JOIN tb_item_orders i JOIN tb_clients c ");
+            sql.append(" ON i.order_id = o.id AND o.client_id = c.id ");
+            sql.append(" WHERE 1=1 ");
+
+            if (!isNull(orderId)) {
+                sql.append(" AND o.id = :orderId ");
+                parameters.put("orderId", orderId.toString());
+            }
+            if (!isNull(clientId)) {
+                sql.append(" AND c.id = :clientId ");
+                parameters.put("clientId", clientId);
+            }
+            if (!isNull(status)) {
+                sql.append(" AND o.status = :status ");
+                parameters.put("status", status);
+            }
+            if (!isNull(dateTimeStart)) {
+                sql.append(" AND o.order_date >= :dateTimeStart ");
+                parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (!isNull(dateTimeEnd)) {
+                sql.append(" AND o.order_date <= :dateTimeEnd ");
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (!isNull(minQuantity)) {
+                sql.append(" AND i.quantity >= :minQuantity ");
+                parameters.put("minQuantity", minQuantity);
+            }
+            if (!isNull(maxQuantity)) {
+                sql.append(" AND i.quantity <= :maxQuantity ");
+                parameters.put("maxQuantity", maxQuantity);
+            }
+
+            sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", linesPerPage)
+                    .setParameter("offset", page * linesPerPage);
+
+            setQueryParameters(parameters, query);
+
+            List<Object[]> resultList = query.getResultList();
+            List<GlobalFullDetailsDto> orderDetailsList = new ArrayList<>();
+
+            for (Object[] result : resultList) {
+                GlobalFullDetailsDto orderDetails = new GlobalFullDetailsDto();
+
+                OrderDto orderDto = new OrderDto();
+                orderDto.setId(UUID.fromString((String) result[0]));
+                orderDto.setOrderDate(((Timestamp) result[1]).toLocalDateTime());
+                orderDto.setStatus((String) result[2]);
+
+                orderDetails.setOrder(orderDto);
+
+                ClientDto clientDto = new ClientDto();
+                clientDto.setId(((Number) result[3]).longValue());
+                clientDto.setName((String) result[4]);
+                clientDto.setEmail((String) result[5]);
+
+                orderDetails.setClient(clientDto);
+
+                ItemOrderDto itemOrderDto = new ItemOrderDto();
+                itemOrderDto.setQuantity(((Number) result[6]).intValue());
+                itemOrderDto.setTotalPrice(((Number) result[7]).doubleValue());
+
+                orderDetails.setItemOrder(itemOrderDto);
+
+                orderDetailsList.add(orderDetails);
+            }
+
+            return orderDetailsList;
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar detalhes dos pedidos filtrados.");
+        }
+    }
+
     private void setQueryParameters(Map<String, Object> parameters, Query query) {
         for (Map.Entry<String, Object> param : parameters.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());
         }
     }
-
 }

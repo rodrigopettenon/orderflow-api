@@ -15,8 +15,17 @@ public class ItemOrderDto implements Serializable {
     private UUID productId;
     private Integer quantity;
     private Double price;
+    private Double totalPrice;
 
     public ItemOrderDto() {
+    }
+
+    public Double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(Double totalPrice) {
+        this.totalPrice = totalPrice;
     }
 
     public UUID getId() {

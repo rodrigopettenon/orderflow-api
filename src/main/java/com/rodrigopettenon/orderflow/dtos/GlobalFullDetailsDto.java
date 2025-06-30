@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ItemOrderFullDetailsDto implements Serializable {
+public class GlobalFullDetailsDto implements Serializable {
 
     private static final long serialVersionUID = -1494348510536341346L;
 

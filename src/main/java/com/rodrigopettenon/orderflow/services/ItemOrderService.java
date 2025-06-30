@@ -2,7 +2,7 @@ package com.rodrigopettenon.orderflow.services;
 
 import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.dtos.ItemOrderDto;
-import com.rodrigopettenon.orderflow.dtos.ItemOrderFullDetailsDto;
+import com.rodrigopettenon.orderflow.dtos.GlobalFullDetailsDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ItemOrderModel;
 import com.rodrigopettenon.orderflow.models.OrderModel;
@@ -68,8 +68,7 @@ public class ItemOrderService {
         validateFilteredItemOrdersId(id);
         validateFilteredOrderId(orderId);
         validateFilteredProductId(productId);
-        validateFilteredMinQuantity(minQuantity, maxQuantity);
-        validateFilteredMaxQuantity(maxQuantity, minQuantity);
+        validateFilteredMinQuantityAndMaxQuantity(minQuantity, maxQuantity);
         Integer fixedPage = fixPage(page);
         Integer fixedLinesPerPage = fixLinesPerPage(linesPerPage);
         String fixedDirection = fixDirection(direction);
@@ -80,9 +79,9 @@ public class ItemOrderService {
                 fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
-    public GlobalPageDto<ItemOrderFullDetailsDto> findFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
-                                                                            Long clientId, Integer page, Integer linesPerPage,
-                                                                            String direction, String orderBy) {
+    public GlobalPageDto<GlobalFullDetailsDto> findFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
+                                                                         Long clientId, Integer page, Integer linesPerPage,
+                                                                         String direction, String orderBy) {
         validateFilteredItemOrdersId(itemOrderId);
         validateFilteredFullDetailsProductId(productId);
         validateFilteredFullDetailsOrderId(orderId);
@@ -130,68 +129,54 @@ public class ItemOrderService {
         return linesPerPage;
     }
 
-    private void validateFilteredMaxQuantity(Integer maxQuantity, Integer minQuantity) {
-        if (!isNull(maxQuantity)) {
-            if (maxQuantity <= 0) {
-                throw new ClientErrorException("A quantidade máxima do item do pedido deve ser maior que 0.");
-            }
-            if (!isNull(minQuantity) && maxQuantity < minQuantity) {
-                throw new ClientErrorException("A quantidade máxima não pode ser menor que a quantidade mínima.");
-            }
+    protected void validateFilteredMinQuantityAndMaxQuantity(Integer minQuantity, Integer maxQuantity) {
+        if (!isNull(maxQuantity) && maxQuantity <= 0) {
+            throw new ClientErrorException("A quantidade máxima do item do pedido deve ser maior que 0.");
         }
-    }
+        if (!isNull(minQuantity) && !isNull(maxQuantity) && maxQuantity < minQuantity) {
+            throw new ClientErrorException("A quantidade máxima não pode ser menor que a quantidade mínima.");
+        }
+        if (!isNull(minQuantity) && minQuantity <= 0) {
+            throw new ClientErrorException("A quantidade mínima do item do pedido deve ser maior que 0.");
+        }
 
-    private void validateFilteredMinQuantity(Integer minQuantity, Integer maxQuantity) {
-        if (!isNull(minQuantity)) {
-            if (minQuantity <= 0) {
-                throw new ClientErrorException("A quantidade mínima do item do pedido deve ser maior que 0.");
-            }
-            if (!isNull(maxQuantity) && minQuantity > maxQuantity) {
-                throw new ClientErrorException("A quantidade mínima não pode ser maior que a quantidade máxima.");
-            }
-        }
     }
 
     private void validateFilteredItemOrdersId(UUID id) {
-        if (!isNull(id)) {
-            if (!itemOrderRepository.existsItemOrderById(id)) {
-                throw new ClientErrorException("O ID do item do pedido informado não está cadastrado.");
-            }
+        if (!isNull(id) && !itemOrderRepository.existsItemOrderById(id)) {
+            throw new ClientErrorException("O ID do item do pedido informado não está cadastrado.");
         }
     }
 
     private void validateFilteredOrderId(UUID orderId) {
-        if (!isNull(orderId)) {
-            if (!orderRepository.existsOrderById(orderId)) {
-                throw new ClientErrorException("O ID do pedido informado não está cadastrado.");
-            }
+        if (!isNull(orderId) && !orderRepository.existsOrderById(orderId)) {
+            throw new ClientErrorException("O ID do pedido informado não está cadastrado.");
         }
     }
 
     private void validateFilteredProductId(UUID productId) {
-        if (!isNull(productId)) {
-            if (!productRepository.existsProductById(productId)) {
-                throw new ClientErrorException("O ID do produto informado não está cadastrado.");
-            }
+
+        if (!isNull(productId) &&!productRepository.existsProductById(productId)) {
+            throw new ClientErrorException("O ID do produto informado não está cadastrado.");
         }
+
     }
 
     private void validateFilteredFullDetailsOrderId(UUID orderId) {
         validateFilteredOrderId(orderId);
-        if (!isNull(orderId)) {
-            if (!itemOrderRepository.existsItemOrderByOrderId(orderId)) {
-                throw new ClientErrorException("Nenhum item de pedido cadastrado com o ID do pedido informado.");
-            }
+        if (!isNull(orderId) && !itemOrderRepository.existsItemOrderByOrderId(orderId)) {
+            throw new ClientErrorException("Nenhum item de pedido cadastrado com o ID do pedido informado.");
         }
+
     }
 
     private void validateFilteredFullDetailsProductId(UUID productId) {
         validateFilteredProductId(productId);
-        if (!isNull(productId)) {
-            if (!itemOrderRepository.existsItemOrderByProductId(productId)) {
-                throw new ClientErrorException("Nenhum item de pedido cadastrado com o ID do produto informado.");
-            }
+
+        if (!isNull(productId) && !itemOrderRepository.existsItemOrderByProductId(productId)) {
+            throw new ClientErrorException("Nenhum item de pedido cadastrado com o ID do produto informado.");
         }
+
     }
 
     private void validateFilteredFullDetailsClientId(Long clientId) {

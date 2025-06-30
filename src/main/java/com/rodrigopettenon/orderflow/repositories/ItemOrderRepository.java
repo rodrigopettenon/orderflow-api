@@ -240,25 +240,25 @@ public class ItemOrderRepository {
         }
     }
 
-    public GlobalPageDto<ItemOrderFullDetailsDto> findFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
-                                                                            Long clientId, Integer page, Integer linePerPage,
-                                                                            String direction, String orderBy) {
+    public GlobalPageDto<GlobalFullDetailsDto> findFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
+                                                                         Long clientId, Integer page, Integer linePerPage,
+                                                                         String direction, String orderBy) {
 
         Long total = queryCountFullFilteredItemOrderDetails(itemOrderId, productId, orderId, clientId);
 
-        List<ItemOrderFullDetailsDto> itemOrderFullDetailsList = queryFindFullDetailsItemOrders(itemOrderId, productId, orderId,
+        List<GlobalFullDetailsDto> itemOrderFullDetailsList = queryFindFullDetailsItemOrders(itemOrderId, productId, orderId,
                 clientId, page, linePerPage, direction, orderBy);
 
-        GlobalPageDto<ItemOrderFullDetailsDto> itemOrderFullDetailsPage = new GlobalPageDto<>();
+        GlobalPageDto<GlobalFullDetailsDto> itemOrderFullDetailsPage = new GlobalPageDto<>();
         itemOrderFullDetailsPage.setTotal(total);
         itemOrderFullDetailsPage.setItems(itemOrderFullDetailsList);
 
         return itemOrderFullDetailsPage;
     }
 
-    private List<ItemOrderFullDetailsDto> queryFindFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
-                                                                         Long clientId, Integer page, Integer linePerPage,
-                                                                         String direction, String orderBy) {
+    private List<GlobalFullDetailsDto> queryFindFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
+                                                                      Long clientId, Integer page, Integer linePerPage,
+                                                                      String direction, String orderBy) {
         try{
             Map<String, Object> parameters = new HashMap<>();
 
@@ -299,10 +299,10 @@ public class ItemOrderRepository {
             setQueryParameters(query, parameters);
 
             List<Object[]> results = query.getResultList();
-            List<ItemOrderFullDetailsDto> fullDetailsList = new ArrayList<>();
+            List<GlobalFullDetailsDto> fullDetailsList = new ArrayList<>();
 
             for (Object[] result : results) {
-                ItemOrderFullDetailsDto itemOrderFullDetailsDto = new ItemOrderFullDetailsDto();
+                GlobalFullDetailsDto itemOrderFullDetailsDto = new GlobalFullDetailsDto();
 
                 ItemOrderDto itemOrderDto = new ItemOrderDto();
                 itemOrderDto.setId(UUID.fromString((String) result[0]));
