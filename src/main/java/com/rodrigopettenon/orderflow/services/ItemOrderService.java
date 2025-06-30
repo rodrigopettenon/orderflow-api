@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import static com.rodrigopettenon.orderflow.utils.LogUtil.logFilterItemOrderMaxQuantityValidation;
+import static com.rodrigopettenon.orderflow.utils.LogUtil.logFilterItemOrderMinQuantityValidation;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -131,6 +133,8 @@ public class ItemOrderService {
     }
 
     protected void validateFilteredMinQuantityAndMaxQuantity(Integer minQuantity, Integer maxQuantity) {
+        logFilterItemOrderMinQuantityValidation(minQuantity);
+        logFilterItemOrderMaxQuantityValidation(maxQuantity);
         if (nonNull(maxQuantity) && maxQuantity <= 0) {
             throw new ClientErrorException("A quantidade máxima do item do pedido deve ser maior que 0.");
         }

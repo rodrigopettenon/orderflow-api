@@ -112,6 +112,7 @@ public class LogUtil {
     public static void logOrderIdValidation(UUID id) {
         logValidation("id do pedido", id);
     }
+
     public static void logFilterOrderIdValidation(UUID id) {
         logFilterValidation("id do pedido", id);
     }
@@ -130,6 +131,16 @@ public class LogUtil {
 
     public static void logFilterOrderStatusValidation(String status) {
         logFilterValidation("status do pedido", status);
+    }
+
+
+    //ItemOrder
+    public static void logFilterItemOrderMinQuantityValidation(Integer minQuantity) {
+        logFilterValidation("quantidade mínima de item de pedido", minQuantity);
+    }
+
+    public static void logFilterItemOrderMaxQuantityValidation(Integer maxQuantity) {
+        logFilterValidation("quantidade máxima de item de pedido", maxQuantity);
     }
 
     // LOGS DE INICIOS
@@ -204,9 +215,40 @@ public class LogUtil {
         logStartOfProcess("busca de pedidos filtrados", null);
     }
 
+    public static void logQueryFindFilteredOrdersStart() {
+        logStartOfProcess("query de busca de pedidos filtrados", null);
+    }
+
+    public static void logQueryCountFilteredOrdersStart() {
+        logStartOfProcess("query de contagem de pedidos filtrados", null);
+    }
+
+    public static void logQueryFindFilteredOrdersDetailsStart() {
+        logStartOfProcess("query de busca de pedidos filtrados com detalhes", null);
+    }
+
+    public static void logQueryCountFilteredOrdersDetailsStart() {
+        logStartOfProcess("query de contagem de pedidos filtrados com detalhes", null);
+    }
+
     public static void logFindOrderByIdStart(UUID id) {
         logStartOfProcess("busca de pedido pelo id", id);
     }
+
+    public static void logFindFilteredOrderDetailsStart() {
+        logStartOfProcess("busca de pediddos filtrados com detalhes", null);
+    }
+
+    public static void logCheckExistenceOfOrderByIdStart(UUID id) {
+        logStartOfProcess("checagem de existência do pedido pelo id", id);
+    }
+
+    public static void logCheckExistenceOfOrderByClientIdStart(Long clientId) {
+        logStartOfProcess("checagem de existência do pedido pelo id do cliente", clientId);
+    }
+
+
+
 
     //LOGS DE INFO
 
@@ -253,7 +295,7 @@ public class LogUtil {
     }
 
     private static void logSuccessfully(String action, UUID id, Long clientId, LocalDateTime orderDate, String status) {
-        logger.info("[SUCESSO] Sucesso ao {}: name={}, sku={}, minPrice={}, maxPrice={}",action, id, clientId, orderDate, status);
+        logger.info("[SUCESSO] Sucesso ao {}: id={}, clientId={}, orderDate={}, status={}", action, id, clientId, orderDate, status);
     }
 
 
@@ -369,6 +411,16 @@ public class LogUtil {
         logFailed("O SKU do produto não foi encontrado", sku);
     }
 
+    //Orders
+    public static void logOrderNotFoundById(UUID id) {
+        logFailed("O id do pedido não foi encontrado", id);
+    }
+
+    public static void logClientNotFoundByOrderId(UUID orderId) {
+        logFailed("O cliente vinculado ao pedido não foi encontrado", orderId);
+    }
+
+
 
     //LOGS DE ERROS
 
@@ -477,11 +529,27 @@ public class LogUtil {
         logUnexpectedError("verificar existência do pedido pelo ID", id, e);
     }
 
+    public static void logUnexpectedErrorCheckingExistenceOfOrderByClientId(Long id, Exception e) {
+        logUnexpectedError("verificar existência do pedido pelo ID do cliente", id, e);
+    }
+
     public static void logUnexpectedErrorOnFindFilteredOrders(Exception e) {
         logUnexpectedError("buscar pedidos filtrados", null, e);
     }
 
     public static void logUnexpectedErrorOnCountFilteredOrders(Exception e) {
         logUnexpectedError("contar pedidos filtrados", null, e);
+    }
+
+    public static void logUnexpectedErrorOnFindFilteredOrdersDetails(Exception e) {
+        logUnexpectedError("buscar pedidos filtrados com detalhes", null, e);
+    }
+
+    public static void logUnexpectedErrorOnCountFilteredOrdersDetails(Exception e) {
+        logUnexpectedError("contar pedidos filtrados com detalhes", null, e);
+    }
+
+    public static void logUnexpectedErrorOnFindOrderModelById(UUID id, Exception e) {
+        logUnexpectedError("buscar o pedido (OrderModel) pelo id", id, e);
     }
 }

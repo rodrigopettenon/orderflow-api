@@ -37,18 +37,18 @@ public class OrderController extends BaseController{
     }
 
     @GetMapping("/details")
-    public ResponseEntity<?> findFilteredOrderDetails(@RequestParam(required = false) UUID orderId,
-                                                      @RequestParam(required = false) Long clientId,
-                                                      @RequestParam(required = false) LocalDateTime dateTimeStart,
-                                                      @RequestParam(required = false) LocalDateTime dateTimeEnd,
-                                                      @RequestParam(required = false) Integer minQuantity,
-                                                      @RequestParam(required = false) Integer maxQuantity,
-                                                      @RequestParam(required = false) String status,
-                                                      @RequestParam(defaultValue = "0") Integer page,
-                                                      @RequestParam(name = "linesPerPage", defaultValue = "10") Integer linesPerPage,
-                                                      @RequestParam(name = "direction", defaultValue = "asc") String direction,
-                                                      @RequestParam(name = "orderBy", defaultValue = "order_date") String orderBy) {
-        return createObjectReturn(orderService.findFilteredOrderDetails(orderId, clientId, dateTimeStart, dateTimeEnd, minQuantity, maxQuantity,
+    public ResponseEntity<?> findFilteredOrdersDetails(@RequestParam(required = false) UUID orderId,
+                                                       @RequestParam(required = false) Long clientId,
+                                                       @RequestParam(required = false) LocalDateTime dateTimeStart,
+                                                       @RequestParam(required = false) LocalDateTime dateTimeEnd,
+                                                       @RequestParam(required = false) Integer minQuantity,
+                                                       @RequestParam(required = false) Integer maxQuantity,
+                                                       @RequestParam(required = false) String status,
+                                                       @RequestParam(defaultValue = "0") Integer page,
+                                                       @RequestParam(name = "linesPerPage", defaultValue = "10") Integer linesPerPage,
+                                                       @RequestParam(name = "direction", defaultValue = "asc") String direction,
+                                                       @RequestParam(name = "orderBy", defaultValue = "order_date") String orderBy) {
+        return createObjectReturn(orderService.findFilteredOrdersDetails(orderId, clientId, dateTimeStart, dateTimeEnd, minQuantity, maxQuantity,
                 status, page, linesPerPage, direction, orderBy));
     }
 

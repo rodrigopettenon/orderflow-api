@@ -108,9 +108,11 @@ public class OrderService{
         logUpdateOrderStatusByIdSuccessfully(id);
     }
 
-    public GlobalPageDto<GlobalFullDetailsDto> findFilteredOrderDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
-                                                                        Integer minQuantity, Integer maxQuantity, String status, Integer page,
-                                                                        Integer linesPerPage, String direction, String orderBy) {
+    public GlobalPageDto<GlobalFullDetailsDto> findFilteredOrdersDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
+                                                                         Integer minQuantity, Integer maxQuantity, String status, Integer page,
+                                                                         Integer linesPerPage, String direction, String orderBy) {
+        logFindFilteredOrderDetailsStart();
+
         validateFilterOrderIdDetails(orderId);
         validateFilterClientIdDetails(clientId);
         validateFilterClientId(clientId);
@@ -122,12 +124,15 @@ public class OrderService{
         String fixedDirection = fixDirectionFilter(direction);
         String fixedOrderBy = fixOrderByFilteredDetails(orderBy);
 
-        return orderRepository.findFilteredOrderDetails(orderId, clientId, dateTimeStart, dateTimeEnd,
+        return orderRepository.findFilteredOrdersDetails(orderId, clientId, dateTimeStart, dateTimeEnd,
                 minQuantity, maxQuantity, status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
 
     }
 
     private void validateFilteredDateTimeStartAndDateTimeEndDetails(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
+        logFilterOrderDateTimeStartValidation(dateTimeStart);
+        logFilterOrderDateTimeEndValidation(dateTimeEnd);
+
         if (nonNull(dateTimeStart) && dateTimeStart.isAfter(LocalDateTime.now())) {
             throw new ClientErrorException("O filtro data/hora de ínicio não pode estar no futuro.");
         }
