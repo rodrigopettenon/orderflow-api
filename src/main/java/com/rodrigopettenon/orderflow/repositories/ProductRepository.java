@@ -13,8 +13,8 @@ import java.sql.Date;
 import java.util.*;
 
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Repository
 public class ProductRepository {
@@ -247,19 +247,19 @@ public class ProductRepository {
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT name, sku, price, expiration_date FROM tb_products WHERE 1=1 ");
 
-            if (!isBlank(name)) {
+            if (isNotBlank(name)) {
                 sql.append(" AND name LIKE :name ");
                 parameters.put("name", "%" + name + "%");
             }
-            if (!isBlank(sku)) {
+            if (isNotBlank(sku)) {
                 sql.append(" AND sku = :sku ");
                 parameters.put("sku", sku);
             }
-            if (!isNull(minPrice)) {
+            if (nonNull(minPrice)) {
                 sql.append(" AND price >= :minPrice ");
                 parameters.put("minPrice", minPrice);
             }
-            if (!isNull(maxPrice)) {
+            if (nonNull(maxPrice)) {
                 sql.append(" AND price <= :maxPrice ");
                 parameters.put("maxPrice", maxPrice);
             }
@@ -301,19 +301,19 @@ public class ProductRepository {
 
             sql.append(" SELECT COUNT(*) FROM tb_products WHERE 1=1 ");
 
-            if (!isBlank(name)) {
+            if (isNotBlank(name)) {
                 sql.append(" AND name LIKE :name ");
                 parameters.put("name", "%" + name + "%");
             }
-            if (!isBlank(sku)) {
+            if (isNotBlank(sku)) {
                 sql.append(" AND sku = :sku ");
                 parameters.put("sku", sku);
             }
-            if (!isNull(minPrice)) {
+            if (nonNull(minPrice)) {
                 sql.append(" AND price >= :minPrice ");
                 parameters.put("minPrice", minPrice);
             }
-            if (!isNull(maxPrice)) {
+            if (nonNull(maxPrice)) {
                 sql.append(" AND price <= :maxPrice ");
                 parameters.put("maxPrice", maxPrice);
             }

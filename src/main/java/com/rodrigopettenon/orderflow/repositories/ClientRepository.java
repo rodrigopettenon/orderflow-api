@@ -11,11 +11,14 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Repository
 public class ClientRepository {
@@ -319,21 +322,21 @@ public class ClientRepository {
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT name, email, cpf, birth_date FROM tb_clients WHERE 1=1 ");
 
-            if (!isBlank(name)) {
+            if (isNotBlank(name)) {
                 sql.append(" AND name LIKE :name ");
                 parameters.put("name", "%" + name + "%");
             }
 
-            if (!isBlank(email)) {
+            if (isNotBlank(email)) {
                 sql.append(" AND email LIKE :email ");
                 parameters.put("email", "%" + email + "%");
             }
 
-            if (!isBlank(cpf)) {
+            if (isNotBlank(cpf)) {
                 sql.append(" AND cpf = :cpf ");
                 parameters.put("cpf", cpf);
             }
-            if (!isNull(birthStart) || !isNull(birthEnd)) {
+            if (nonNull(birthStart) && nonNull(birthEnd)) {
                 sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
                 parameters.put("birthStart", birthStart);
                 parameters.put("birthEnd", birthEnd);
@@ -377,21 +380,21 @@ public class ClientRepository {
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT COUNT(*) FROM tb_clients WHERE 1=1 ");
 
-            if (!isNull(name)) {
+            if (isNotBlank(name)) {
                 sql.append(" AND name LIKE :name ");
                 parameters.put("name", "%" + name + "%");
             }
 
-            if (!isNull(email)) {
+            if (isNotBlank(email)) {
                 sql.append(" AND email LIKE :email ");
                 parameters.put("email", "%" + email + "%");
             }
 
-            if (!isNull(cpf)) {
+            if (isNotBlank(cpf)) {
                 sql.append(" AND cpf = :cpf ");
                 parameters.put("cpf", cpf);
             }
-            if (!isNull(birthStart) || !isNull(birthEnd)) {
+            if (nonNull(birthStart) || nonNull(birthEnd)) {
                 sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
                 parameters.put("birthStart", birthStart);
                 parameters.put("birthEnd", birthEnd);

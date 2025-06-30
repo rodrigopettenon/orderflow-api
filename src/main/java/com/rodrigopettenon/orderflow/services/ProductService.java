@@ -14,9 +14,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
+import static com.rodrigopettenon.orderflow.utils.StringsValidation.isAlphanumeric;
 import static com.rodrigopettenon.orderflow.utils.StringsValidation.normalizeSpaces;
 import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isAlphanumeric;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Service
@@ -136,10 +137,10 @@ public class ProductService {
 
     private void validateMinPriceFilter(Double minPrice, Double maxPrice) {
         logProductMinPriceFilterValidation(minPrice);
-        if (!isNull(minPrice) && minPrice <= 0) {
+        if (nonNull(minPrice) && minPrice <= 0) {
             throw new ClientErrorException("O preço minimo do produto não pode ser menor ou igual a 0.");
         }
-        if (!isNull(minPrice) && !isNull(maxPrice)) {
+        if (nonNull(minPrice) && nonNull(maxPrice)) {
             if (minPrice > maxPrice) {
                 throw new ClientErrorException("O preço minimo não pode ser maior que o preço maximo.");
             }
@@ -148,10 +149,10 @@ public class ProductService {
 
     private void validateMaxPriceFilter(Double maxPrice, Double minPrice) {
         logProductMaxPriceFilterValidation(maxPrice);
-        if (!isNull(maxPrice) && maxPrice <= 0) {
+        if (nonNull(maxPrice) && maxPrice <= 0) {
             throw new ClientErrorException("O preço máximo do produto não pode ser menor ou igual a 0.");
         }
-        if (!isNull(maxPrice) && !isNull(minPrice)) {
+        if (nonNull(maxPrice) && nonNull(minPrice)) {
             if (minPrice > maxPrice) {
                 throw new ClientErrorException("O preço maximo não pode ser menor que o preço minimo.");
             }

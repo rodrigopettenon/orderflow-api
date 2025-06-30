@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Repository
 public class OrderRepository {
@@ -213,20 +213,20 @@ public class OrderRepository {
             Map<String, Object> parameters = new HashMap<>();
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT id, client_id, order_date, status FROM tb_orders WHERE 1=1");
-            if (!isNull(id)) {
+            if (nonNull(id)) {
                 sql.append(" AND id = :id ");
                 parameters.put("id", id.toString());
             }
-            if (!isNull(clientId)) {
+            if (nonNull(clientId)) {
                 sql.append(" AND client_id = :client_id ");
                 parameters.put("client_id", clientId);
             }
-            if (!isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
+            if (nonNull(dateTimeStart) && nonNull(dateTimeEnd)) {
                 sql.append(" AND order_date >= :dateTimeStart AND order_date < :dateTimeEnd ");
                 parameters.put("dateTimeStart", dateTimeStart);
                 parameters.put("dateTimeEnd", dateTimeEnd);
             }
-            if (!isBlank(status)) {
+            if (isNotBlank(status)) {
                 sql.append(" AND status = :status ");
                 parameters.put("status", status);
             }
@@ -268,20 +268,20 @@ public class OrderRepository {
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT COUNT(*) FROM tb_orders WHERE 1=1 ");
 
-            if (!isNull(id)) {
+            if (nonNull(id)) {
                 sql.append(" AND id = :id ");
                 parameters.put("id", id.toString());
             }
-            if (!isNull(clientId)) {
+            if (nonNull(clientId)) {
                 sql.append(" AND client_id = :client_id ");
                 parameters.put("client_id", clientId);
             }
-            if (!isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
+            if (nonNull(dateTimeStart) && nonNull(dateTimeEnd)) {
                 sql.append(" AND order_date >= :dateTimeStart AND order_date < :dateTimeEnd ");
                 parameters.put("dateTimeStart", dateTimeStart);
                 parameters.put("dateTimeEnd", dateTimeEnd);
             }
-            if (!isBlank(status)) {
+            if (isNotBlank(status)) {
                 sql.append(" AND status = :status ");
                 parameters.put("status", status);
             }
@@ -328,31 +328,31 @@ public class OrderRepository {
             sql.append(" ON i.order_id = o.id AND o.client_id = c.id ");
             sql.append(" WHERE 1=1 ");
 
-            if (!isNull(orderId)) {
+            if (nonNull(orderId)) {
                 sql.append(" AND o.id = :orderId ");
                 parameters.put("orderId", orderId.toString());
             }
-            if (!isNull(clientId)) {
+            if (nonNull(clientId)) {
                 sql.append(" AND c.id = :clientId ");
                 parameters.put("clientId", clientId);
             }
-            if (!isNull(status)) {
+            if (isNotBlank(status)) {
                 sql.append(" AND o.status = :status ");
                 parameters.put("status", status);
             }
-            if (!isNull(dateTimeStart)) {
+            if (nonNull(dateTimeStart)) {
                 sql.append(" AND o.order_date >= :dateTimeStart ");
                 parameters.put("dateTimeStart", dateTimeStart);
             }
-            if (!isNull(dateTimeEnd)) {
+            if (nonNull(dateTimeEnd)) {
                 sql.append(" AND o.order_date <= :dateTimeEnd ");
                 parameters.put("dateTimeEnd", dateTimeEnd);
             }
-            if (!isNull(minQuantity)) {
+            if (nonNull(minQuantity)) {
                 sql.append(" AND i.quantity >= :minQuantity ");
                 parameters.put("minQuantity", minQuantity);
             }
-            if (!isNull(maxQuantity)) {
+            if (nonNull(maxQuantity)) {
                 sql.append(" AND i.quantity <= :maxQuantity ");
                 parameters.put("maxQuantity", maxQuantity);
             }
@@ -385,31 +385,31 @@ public class OrderRepository {
             sql.append(" ON i.order_id = o.id AND o.client_id = c.id ");
             sql.append(" WHERE 1=1 ");
 
-            if (!isNull(orderId)) {
+            if (nonNull(orderId)) {
                 sql.append(" AND o.id = :orderId ");
                 parameters.put("orderId", orderId.toString());
             }
-            if (!isNull(clientId)) {
+            if (nonNull(clientId)) {
                 sql.append(" AND c.id = :clientId ");
                 parameters.put("clientId", clientId);
             }
-            if (!isNull(status)) {
+            if (isNotBlank(status)) {
                 sql.append(" AND o.status = :status ");
                 parameters.put("status", status);
             }
-            if (!isNull(dateTimeStart)) {
+            if (nonNull(dateTimeStart)) {
                 sql.append(" AND o.order_date >= :dateTimeStart ");
                 parameters.put("dateTimeStart", dateTimeStart);
             }
-            if (!isNull(dateTimeEnd)) {
+            if (nonNull(dateTimeEnd)) {
                 sql.append(" AND o.order_date <= :dateTimeEnd ");
                 parameters.put("dateTimeEnd", dateTimeEnd);
             }
-            if (!isNull(minQuantity)) {
+            if (nonNull(minQuantity)) {
                 sql.append(" AND i.quantity >= :minQuantity ");
                 parameters.put("minQuantity", minQuantity);
             }
-            if (!isNull(maxQuantity)) {
+            if (nonNull(maxQuantity)) {
                 sql.append(" AND i.quantity <= :maxQuantity ");
                 parameters.put("maxQuantity", maxQuantity);
             }

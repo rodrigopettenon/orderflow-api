@@ -1,8 +1,8 @@
 package com.rodrigopettenon.orderflow.services;
 
 import com.rodrigopettenon.orderflow.dtos.GlobalFullDetailsDto;
-import com.rodrigopettenon.orderflow.dtos.OrderDto;
 import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
+import com.rodrigopettenon.orderflow.dtos.OrderDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
 import com.rodrigopettenon.orderflow.models.OrderModel;
@@ -24,7 +24,8 @@ import java.util.UUID;
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
 import static com.rodrigopettenon.orderflow.utils.StringsValidation.removeAllSpaces;
 import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Service
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -79,8 +80,7 @@ public class OrderService{
         String fixedOrderBy = fixOrderByFilter(orderBy);
         validateFilterOrderId(id);
         validateFilterClientId(clientId);
-        validateFilterOrderDateTimeStart(dateTimeStart, dateTimeEnd);
-        validateFilterOrderDateTimeEnd(dateTimeEnd, dateTimeStart);
+        validateFilterOrderDateTimeStartAndDateTimeEnd(dateTimeStart, dateTimeEnd);
         validateFilterOrderStatus(status);
 
         return orderRepository.findFilteredOrders(id, clientId, dateTimeStart, dateTimeEnd, status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
@@ -128,15 +128,15 @@ public class OrderService{
     }
 
     private void validateFilteredDateTimeStartAndDateTimeEndDetails(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
-        if (!isNull(dateTimeStart) && dateTimeStart.isAfter(LocalDateTime.now())) {
+        if (nonNull(dateTimeStart) && dateTimeStart.isAfter(LocalDateTime.now())) {
             throw new ClientErrorException("O filtro data/hora de ínicio não pode estar no futuro.");
         }
-        if (!isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
+        if (nonNull(dateTimeStart) && !isNull(dateTimeEnd)) {
             if (dateTimeEnd.isBefore(dateTimeStart)) {
                 throw new ClientErrorException("O filtro data/hora de ínicio não pode ser após a data final.");
             }
         }
-        if (!isNull(dateTimeEnd) && dateTimeEnd.isAfter(LocalDateTime.now())) {
+        if (nonNull(dateTimeEnd) && dateTimeEnd.isAfter(LocalDateTime.now())) {
             throw new ClientErrorException("O filtro data/hora final não pode estar no futuro.");
         }
 
@@ -169,7 +169,7 @@ public class OrderService{
     private OrderStatus validateOrderStatus(String status) {
         logOrderStatusValidation(status);
         try{
-            if (!isBlank(status)) {
+            if (isNotBlank(status)) {
                 String sanitizedStatus = removeAllSpaces(status.toUpperCase());
                 return OrderStatus.valueOf(sanitizedStatus);
             }
@@ -199,58 +199,50 @@ public class OrderService{
 
      private void validateFilterOrderId(UUID id) {
         logFilterOrderIdValidation(id);
-        if (!isNull(id)) {
+        if (nonNull(id)) {
             notExistsById(id);
         }
      }
 
      private void validateFilterClientId(Long clientId) {
         logFilterOrderClientIdValidation(clientId);
-        if (!isNull(clientId) && !clientRepository.existsClientById(clientId)) {
+        if (nonNull(clientId) && !clientRepository.existsClientById(clientId)) {
             throw new ClientErrorException("O id do cliente informado não está cadastrado.");
         }
      }
 
      private void validateFilterOrderIdDetails(UUID orderId) {
         validateFilterOrderId(orderId);
-        if (!isNull(orderId) && !itemOrderRepository.existsItemOrderByOrderId(orderId)) {
+        if (nonNull(orderId) && !itemOrderRepository.existsItemOrderByOrderId(orderId)) {
             throw new ClientErrorException("Nenhum item de pedido vinculado ao id do pedido informado.");
         }
      }
 
      private void validateFilterClientIdDetails(Long clientId) {
         validateFilterClientId(clientId);
-        if (!isNull(clientId) && !itemOrderRepository.existsItemOrderByClientId(clientId)) {
+        if (nonNull(clientId) && !itemOrderRepository.existsItemOrderByClientId(clientId)) {
             throw new ClientErrorException("Nenhum item de pedido vinculado ao id do cliente informado.");
         }
      }
 
-    private void validateFilterOrderDateTimeStart(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
+    private void validateFilterOrderDateTimeStartAndDateTimeEnd(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
         logFilterOrderDateTimeStartValidation(dateTimeStart);
-        if (!isNull(dateTimeStart) && isNull(dateTimeEnd)) {
+        logFilterOrderDateTimeEndValidation(dateTimeEnd);
+        if (nonNull(dateTimeStart) && isNull(dateTimeEnd)) {
             throw new ClientErrorException("Não é permitido preencher apenas data/hora ínicio.");
         }
-        if (!isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
+        if (isNull(dateTimeStart) && nonNull(dateTimeEnd)) {
+            throw new ClientErrorException("Não é permitido preencher apenas data/hora final.");
+        }
+        if (nonNull(dateTimeStart) && nonNull(dateTimeEnd)) {
             if (dateTimeStart.isAfter(LocalDateTime.now())) {
                 throw new ClientErrorException("O filtro data/hora de ínicio não pode ser uma data futura.");
             }
             if (dateTimeStart.isAfter(dateTimeEnd)) {
                 throw new ClientErrorException("O filtro data/hora de ínicio não pode ser posterior ao data/hora final.");
             }
-        }
-    }
-
-    private void validateFilterOrderDateTimeEnd(LocalDateTime dateTimeEnd, LocalDateTime dateTimeStart) {
-        logFilterOrderDateTimeEndValidation(dateTimeEnd);
-        if (isNull(dateTimeStart) && !isNull(dateTimeEnd)) {
-            throw new ClientErrorException("Não é permitido preencher apenas data/hora final.");
-        }
-        if (!isNull(dateTimeEnd) && !isNull(dateTimeStart)) {
             if (dateTimeEnd.isAfter(LocalDateTime.now())) {
                 throw new ClientErrorException("O filtro data/hora final não pode ser uma data futura.");
-            }
-            if (dateTimeEnd.isBefore(dateTimeStart)) {
-                throw new ClientErrorException("O filtro data/hora final não pode ser anterior ao data/hora inicio.");
             }
         }
     }
@@ -258,7 +250,7 @@ public class OrderService{
     private void validateFilterOrderStatus(String status) {
         logFilterOrderStatusValidation(status);
         try {
-            if (!isBlank(status)) {
+            if (isNotBlank(status)) {
                 String sanitizedStatus = removeAllSpaces(status.toUpperCase());
                 OrderStatus.valueOf(sanitizedStatus);
             }

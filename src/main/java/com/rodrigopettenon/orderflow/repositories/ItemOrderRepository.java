@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.Timestamp;
 import java.util.*;
 
-import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Repository
 public class ItemOrderRepository {
@@ -144,23 +144,23 @@ public class ItemOrderRepository {
         StringBuilder sql = new StringBuilder();
         sql.append(" SELECT id, order_id, product_id, quantity, price FROM tb_item_orders WHERE 1=1 ");
 
-        if (!isNull(id)) {
+        if (nonNull(id)) {
             sql.append(" AND id = :id ");
             parameters.put("id", id.toString());
         }
-        if (!isNull(orderId)) {
+        if (nonNull(orderId)) {
             sql.append(" AND order_id = :order_id ");
             parameters.put("order_id", orderId.toString());
         }
-        if (!isNull(productId)) {
+        if (nonNull(productId)) {
             sql.append(" AND product_id = :product_id ");
             parameters.put("product_id", productId.toString());
         }
-        if (!isNull(minQuantity)) {
+        if (nonNull(minQuantity)) {
             sql.append(" AND quantity >= :minQuantity ");
             parameters.put("minQuantity", minQuantity);
         }
-        if (!isNull((maxQuantity))) {
+        if (nonNull((maxQuantity))) {
             sql.append(" AND quantity <= :maxQuantity ");
             parameters.put("maxQuantity", maxQuantity);
         }
@@ -199,23 +199,23 @@ public class ItemOrderRepository {
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT COUNT(*) FROM tb_item_orders WHERE 1=1 ");
 
-            if (!isNull(id)) {
+            if (nonNull(id)) {
                 sql.append(" AND id = :id ");
                 parameters.put("id", id.toString());
             }
-            if (!isNull(orderId)) {
+            if (nonNull(orderId)) {
                 sql.append(" AND order_id = :order_id ");
                 parameters.put("order_id", orderId.toString());
             }
-            if (!isNull(productId)) {
+            if (nonNull(productId)) {
                 sql.append(" AND product_id = :product_id ");
                 parameters.put("product_id", productId.toString());
             }
-            if (!isNull(minQuantity)) {
+            if (nonNull(minQuantity)) {
                 sql.append(" AND quantity >= :minQuantity ");
                 parameters.put("minQuantity", minQuantity);
             }
-            if (!isNull((maxQuantity))) {
+            if (!nonNull((maxQuantity))) {
                 sql.append(" AND quantity <= :maxQuantity ");
                 parameters.put("maxQuantity", maxQuantity);
             }
@@ -273,19 +273,19 @@ public class ItemOrderRepository {
             sql.append(" JOIN tb_clients c ON o.client_id = c.id ");
             sql.append(" WHERE 1=1 ");
 
-            if (!isNull(itemOrderId)) {
+            if (nonNull(itemOrderId)) {
                 sql.append(" AND i.id = :itemOrderId ");
                 parameters.put("itemOrderId", itemOrderId.toString());
             }
-            if (!isNull(productId)) {
+            if (nonNull(productId)) {
                 sql.append(" AND p.id = :productId ");
                 parameters.put("productId", productId.toString());
             }
-            if (!isNull(orderId)) {
+            if (nonNull(orderId)) {
                 sql.append(" AND o.id = :orderId ");
                 parameters.put("orderId", orderId.toString());
             }
-            if (!isNull(clientId)) {
+            if (nonNull(clientId)) {
                 sql.append(" AND c.id = :clientId ");
                 parameters.put("clientId", clientId);
             }
@@ -354,19 +354,19 @@ public class ItemOrderRepository {
             sql.append(" JOIN tb_clients c ON o.client_id = c.id ");
             sql.append(" WHERE 1=1 ");
 
-            if (!isNull(itemOrderId)) {
+            if (nonNull(itemOrderId)) {
                 sql.append(" AND i.id = :itemOrderId ");
                 parameters.put("itemOrderId", itemOrderId.toString());
             }
-            if (!isNull(productId)) {
+            if (nonNull(productId)) {
                 sql.append(" AND p.id = :productId ");
                 parameters.put("productId", productId.toString());
             }
-            if (!isNull(orderId)) {
+            if (nonNull(orderId)) {
                 sql.append(" AND o.id = :orderId ");
                 parameters.put("orderId", orderId.toString());
             }
-            if (!isNull(clientId)) {
+            if (nonNull(clientId)) {
                 sql.append(" AND c.id = :clientId ");
                 parameters.put("clientId", clientId);
             }
