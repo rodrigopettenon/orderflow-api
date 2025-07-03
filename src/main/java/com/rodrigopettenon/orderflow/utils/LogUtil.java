@@ -143,12 +143,46 @@ public class LogUtil {
         logFilterValidation("quantidade máxima de item de pedido", maxQuantity);
     }
 
+    public static void logItemOrderOrderIdValidation(UUID orderId) {
+        logValidation("id do pedido no item", orderId);
+    }
+
+    public static void logItemOrderProductIdValidation(UUID productId) {
+        logValidation("id do produto no item", productId);
+    }
+
+    public static void logItemOrderQuantityValidation(Integer quantity) {
+        logValidation("quantidade do item de pedido", quantity);
+    }
+
+    public static void logFilterItemOrderIdValidation(UUID id) {
+        logFilterValidation("id do item de pedido", id);
+    }
+
+    public static void logFilterItemOrderProductIdValidation(UUID productId) {
+        logFilterValidation("id do produto no item de pedido", productId);
+    }
+
+    public static void logFilterItemOrderOrderIdValidation(UUID orderId) {
+        logFilterValidation("id do pedido no item de pedido", orderId);
+    }
+
+    public static void logFilterItemOrderClientIdValidation(Long clientId) {
+        logFilterValidation("id do cliente do item de pedido", clientId);
+    }
+
+
     // LOGS DE INICIOS
 
     //Genérico
     private static void logStartOfProcess(String process, Object value) {
         logger.info("[INÍCIO] Iniciando processo de {}: {}", process, value);
     }
+
+    public static void logSaveItemOrderStart(UUID orderId, UUID productId) {
+        logger.info("[INÍCIO] Iniciando salvamento de item de pedido: orderId={}, productId={}", orderId, productId);
+    }
+
 
 
     //Clients
@@ -248,6 +282,14 @@ public class LogUtil {
     }
 
 
+    //ItemOrder
+    public static void logFindFilteredItemOrdersStart() {
+        logStartOfProcess("busca de itens de pedido com filtros", null);
+    }
+
+    public static void logFindFullDetailsItemOrdersStart() {
+        logStartOfProcess("busca de itens de pedido com detalhes", null);
+    }
 
 
     //LOGS DE INFO
@@ -296,6 +338,10 @@ public class LogUtil {
 
     private static void logSuccessfully(String action, UUID id, Long clientId, LocalDateTime orderDate, String status) {
         logger.info("[SUCESSO] Sucesso ao {}: id={}, clientId={}, orderDate={}, status={}", action, id, clientId, orderDate, status);
+    }
+
+    public static void logSuccessfully(String action, UUID orderId, UUID productId) {
+        logger.info("[SUCESSO] Sucesso ao {}: orderId={}, productId={}",action, orderId, productId);
     }
 
 
@@ -376,6 +422,20 @@ public class LogUtil {
     }
 
 
+    //ItemOrder
+    public static void logSaveItemOrderSuccessfully(UUID orderId, UUID productId) {
+        logSuccessfully("salvar item do pedido", orderId, productId);
+    }
+
+    public static void logFindFilteredItemOrdersSuccessfully() {
+        logSuccessfully("buscar por itens de pedido com filtros", null);
+    }
+
+    public static void logFindFullDetailsItemOrdersSuccessfully() {
+        logSuccessfully("buscar por itens de pedido com detalhes", null);
+    }
+
+
     // LOGS DE FALHAS
 
     //Genérico
@@ -418,6 +478,23 @@ public class LogUtil {
 
     public static void logClientNotFoundByOrderId(UUID orderId) {
         logFailed("O cliente vinculado ao pedido não foi encontrado", orderId);
+    }
+
+    //ItemOrder
+    public static void logItemOrderNotFoundById(UUID id) {
+        logFailed("O id do item de pedido não foi encontrado", id);
+    }
+
+    public static void logItemOrderNotFoundByOrderId(UUID orderId) {
+        logFailed("Nenhum item de pedido encontrado com o ID do pedido", orderId);
+    }
+
+    public static void logItemOrderNotFoundByProductId(UUID productId) {
+        logFailed("Nenhum item de pedido encontrado com o ID do produto", productId);
+    }
+
+    public static void logItemOrderNotFoundByClientId(Long clientId) {
+        logFailed("Nenhum item de pedido encontrado com o ID do cliente", clientId);
     }
 
 

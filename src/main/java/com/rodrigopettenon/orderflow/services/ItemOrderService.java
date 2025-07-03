@@ -20,8 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static com.rodrigopettenon.orderflow.utils.LogUtil.logFilterItemOrderMaxQuantityValidation;
-import static com.rodrigopettenon.orderflow.utils.LogUtil.logFilterItemOrderMinQuantityValidation;
+import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -49,6 +48,8 @@ public class ItemOrderService {
     @Transactional
     public ItemOrderDto saveItemOrder(ItemOrderDto itemOrderDto) {
 
+        logSaveItemOrderStart(itemOrderDto.getOrderId(), itemOrderDto.getProductId());
+
         validateOrderId(itemOrderDto.getOrderId());
         validateProductId(itemOrderDto.getProductId());
         validateQuantity(itemOrderDto.getQuantity());
@@ -68,6 +69,8 @@ public class ItemOrderService {
     public GlobalPageDto<ItemOrderDto> findFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
                                                               Integer maxQuantity, Integer page, Integer linesPerPage,
                                                               String direction, String orderBy) {
+        logFindFilteredItemOrdersStart();
+
         validateFilteredItemOrdersId(id);
         validateFilteredOrderId(orderId);
         validateFilteredProductId(productId);
@@ -85,6 +88,8 @@ public class ItemOrderService {
     public GlobalPageDto<GlobalFullDetailsDto> findFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
                                                                          Long clientId, Integer page, Integer linesPerPage,
                                                                          String direction, String orderBy) {
+        logFindFullDetailsItemOrdersStart();
+
         validateFilteredItemOrdersId(itemOrderId);
         validateFilteredFullDetailsProductId(productId);
         validateFilteredFullDetailsOrderId(orderId);
@@ -148,19 +153,21 @@ public class ItemOrderService {
     }
 
     private void validateFilteredItemOrdersId(UUID id) {
+        logFilterItemOrderIdValidation(id);
         if (nonNull(id) && !itemOrderRepository.existsItemOrderById(id)) {
             throw new ClientErrorException("O ID do item do pedido informado não está cadastrado.");
         }
     }
 
     private void validateFilteredOrderId(UUID orderId) {
+        logFilterItemOrderOrderIdValidation(orderId);
         if (nonNull(orderId) && !orderRepository.existsOrderById(orderId)) {
             throw new ClientErrorException("O ID do pedido informado não está cadastrado.");
         }
     }
 
     private void validateFilteredProductId(UUID productId) {
-
+        logFilterItemOrderProductIdValidation(productId);
         if (nonNull(productId) &&!productRepository.existsProductById(productId)) {
             throw new ClientErrorException("O ID do produto informado não está cadastrado.");
         }
@@ -177,7 +184,6 @@ public class ItemOrderService {
 
     private void validateFilteredFullDetailsProductId(UUID productId) {
         validateFilteredProductId(productId);
-
         if (nonNull(productId) && !itemOrderRepository.existsItemOrderByProductId(productId)) {
             throw new ClientErrorException("Nenhum item de pedido cadastrado com o ID do produto informado.");
         }
@@ -185,6 +191,7 @@ public class ItemOrderService {
     }
 
     private void validateFilteredFullDetailsClientId(Long clientId) {
+        logFilterItemOrderClientIdValidation(clientId);
         if (nonNull(clientId)) {
             if (!clientRepository.existsClientById(clientId)) {
                 throw new ClientErrorException("O ID do cliente informado não está cadastrado.");
@@ -199,6 +206,7 @@ public class ItemOrderService {
     }
 
     private void validateOrderId(UUID orderId) {
+        logItemOrderOrderIdValidation(orderId);
         if (isNull(orderId)) {
             throw new ClientErrorException("O ID do pedido é obrigatório.");
         }
@@ -208,6 +216,7 @@ public class ItemOrderService {
     }
 
     private void validateProductId(UUID productId) {
+        logItemOrderProductIdValidation(productId);
         if(isNull(productId)) {
             throw new ClientErrorException("O ID do produto é obrigatório.");
         }
@@ -217,6 +226,7 @@ public class ItemOrderService {
     }
 
     private void validateQuantity(Integer quantity) {
+        logItemOrderQuantityValidation(quantity);
         if (isNull(quantity)) {
             throw new ClientErrorException("A quantidade do item do pedido é obrigatória.");
         }

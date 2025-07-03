@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.Timestamp;
 import java.util.*;
 
+import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
 import static java.util.Objects.nonNull;
 
 @Repository
@@ -45,6 +46,7 @@ public class ItemOrderRepository {
             itemOrderDto.setQuantity(itemOrderModel.getQuantity());
             itemOrderDto.setPrice(itemOrderModel.getPrice());
 
+            logSaveItemOrderSuccessfully(itemOrderDto.getOrderId(), itemOrderDto.getProductId());
             return itemOrderDto;
 
         } catch (Exception e) {
@@ -123,7 +125,6 @@ public class ItemOrderRepository {
     public GlobalPageDto<ItemOrderDto> findFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
                                                               Integer maxQuantity, Integer page, Integer linesPerPage,
                                                               String direction, String orderBy) {
-
         Long total = queryCountFilteredItemOrders(id, orderId, productId, minQuantity, maxQuantity);
         List<ItemOrderDto> items = queryFindFilteredItemOrders(id, orderId, productId, minQuantity,
                 maxQuantity, page, linesPerPage, direction, orderBy);
@@ -139,56 +140,61 @@ public class ItemOrderRepository {
     private List<ItemOrderDto> queryFindFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
                                                            Integer maxQuantity, Integer page, Integer linesPerPage,
                                                            String direction, String orderBy) {
-        Map<String, Object> parameters = new HashMap<>();
+        try {
+            Map<String, Object> parameters = new HashMap<>();
 
-        StringBuilder sql = new StringBuilder();
-        sql.append(" SELECT id, order_id, product_id, quantity, price FROM tb_item_orders WHERE 1=1 ");
+            StringBuilder sql = new StringBuilder();
+            sql.append(" SELECT id, order_id, product_id, quantity, price FROM tb_item_orders WHERE 1=1 ");
 
-        if (nonNull(id)) {
-            sql.append(" AND id = :id ");
-            parameters.put("id", id.toString());
+            if (nonNull(id)) {
+                sql.append(" AND id = :id ");
+                parameters.put("id", id.toString());
+            }
+            if (nonNull(orderId)) {
+                sql.append(" AND order_id = :order_id ");
+                parameters.put("order_id", orderId.toString());
+            }
+            if (nonNull(productId)) {
+                sql.append(" AND product_id = :product_id ");
+                parameters.put("product_id", productId.toString());
+            }
+            if (nonNull(minQuantity)) {
+                sql.append(" AND quantity >= :minQuantity ");
+                parameters.put("minQuantity", minQuantity);
+            }
+            if (nonNull((maxQuantity))) {
+                sql.append(" AND quantity <= :maxQuantity ");
+                parameters.put("maxQuantity", maxQuantity);
+            }
+
+            sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", linesPerPage)
+                    .setParameter("offset", page * linesPerPage);
+
+            setQueryParameters(query, parameters);
+
+            List<Object[]> resultList = query.getResultList();
+            List<ItemOrderDto> itemOrdersList = new ArrayList<>();
+
+            for (Object[] result : resultList) {
+                ItemOrderDto itemOrderDto = new ItemOrderDto();
+                itemOrderDto.setId(UUID.fromString((String) result[0]));
+                itemOrderDto.setOrderId(UUID.fromString((String) result[1]));
+                itemOrderDto.setProductId(UUID.fromString((String) result[2]));
+                itemOrderDto.setQuantity(((Number) result[3]).intValue());
+                itemOrderDto.setPrice(((Number) result[4]).doubleValue());
+
+                itemOrdersList.add(itemOrderDto);
+            }
+
+            logFindFilteredItemOrdersSuccessfully();
+            return itemOrdersList;
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar itens de produtos filtrados.");
         }
-        if (nonNull(orderId)) {
-            sql.append(" AND order_id = :order_id ");
-            parameters.put("order_id", orderId.toString());
-        }
-        if (nonNull(productId)) {
-            sql.append(" AND product_id = :product_id ");
-            parameters.put("product_id", productId.toString());
-        }
-        if (nonNull(minQuantity)) {
-            sql.append(" AND quantity >= :minQuantity ");
-            parameters.put("minQuantity", minQuantity);
-        }
-        if (nonNull((maxQuantity))) {
-            sql.append(" AND quantity <= :maxQuantity ");
-            parameters.put("maxQuantity", maxQuantity);
-        }
-
-        sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");
-        sql.append(" LIMIT :limit OFFSET :offset");
-
-        Query query = em.createNativeQuery(sql.toString())
-                .setParameter("limit", linesPerPage)
-                .setParameter("offset", page * linesPerPage);
-
-        setQueryParameters(query, parameters);
-
-        List<Object[]> resultList = query.getResultList();
-        List<ItemOrderDto> itemOrdersList = new ArrayList<>();
-
-        for (Object[] result : resultList) {
-            ItemOrderDto itemOrderDto = new ItemOrderDto();
-            itemOrderDto.setId(UUID.fromString((String) result[0]));
-            itemOrderDto.setOrderId(UUID.fromString((String) result[1]));
-            itemOrderDto.setProductId(UUID.fromString((String) result[2]));
-            itemOrderDto.setQuantity(((Number) result[3]).intValue());
-            itemOrderDto.setPrice(((Number) result[4]).doubleValue());
-
-            itemOrdersList.add(itemOrderDto);
-        }
-
-        return itemOrdersList;
     }
 
     private Long queryCountFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
@@ -335,6 +341,7 @@ public class ItemOrderRepository {
                 fullDetailsList.add(itemOrderFullDetailsDto);
             }
 
+            logFindFullDetailsItemOrdersSuccessfully();
             return fullDetailsList;
 
         } catch (Exception e) {
