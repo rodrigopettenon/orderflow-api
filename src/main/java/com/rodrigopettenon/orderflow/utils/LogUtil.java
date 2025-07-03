@@ -629,4 +629,29 @@ public class LogUtil {
     public static void logUnexpectedErrorOnFindOrderModelById(UUID id, Exception e) {
         logUnexpectedError("buscar o pedido (OrderModel) pelo id", id, e);
     }
+
+    //ItemOrder
+    public static void logUnexpectedErrorOnSaveItemOrder(UUID orderId, Exception e) {
+        logUnexpectedError("salvar item de pedido", orderId, e);
+    }
+
+    public static void logUnexpectedErrorOnFindFilteredItemOrders(Exception e) {
+        logUnexpectedError("buscar itens de pedido com filtros", null, e);
+    }
+
+    public static void logUnexpectedErrorOnFindFullDetailsItemOrders(Exception e) {
+        logUnexpectedError("buscar itens de pedido com detalhes", null, e);
+    }
+
+    public static void logUnexpectedErrorCheckingExistenceOfItemOrderByOrderId(UUID orderId, Exception e) {
+        logUnexpectedError("verificar existência de item de pedido pelo ID do pedido", orderId, e);
+    }
+
+    public static void logUnexpectedErrorCheckingExistenceOfItemOrderByProductId(UUID productId, Exception e) {
+        logUnexpectedError("verificar existência de item de pedido pelo ID do produto", productId, e);
+    }
+
+    public static void logUnexpectedErrorCheckingExistenceOfItemOrderByClientId(Long clientId, Exception e) {
+        logUnexpectedError("verificar existência de item de pedido pelo ID do cliente", clientId, e);
+    }
 }

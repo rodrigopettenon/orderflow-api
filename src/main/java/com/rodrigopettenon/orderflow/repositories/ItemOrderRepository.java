@@ -50,6 +50,7 @@ public class ItemOrderRepository {
             return itemOrderDto;
 
         } catch (Exception e) {
+            logUnexpectedErrorOnSaveItemOrder(itemOrderModel.getOrder().getId(), e);
             throw new ClientErrorException("Erro ao salvar o item do pedido no banco de dados.");
         }
     }
@@ -82,6 +83,7 @@ public class ItemOrderRepository {
              return !resultList.isEmpty();
 
         } catch (Exception e) {
+            logUnexpectedErrorCheckingExistenceOfItemOrderByOrderId(orderId, e);
             throw new ClientErrorException("Erro ao verificar existência do item do pedido pelo id do pedido.");
         }
     }
@@ -98,6 +100,7 @@ public class ItemOrderRepository {
             return !resultList.isEmpty();
 
         } catch (Exception e) {
+            logUnexpectedErrorCheckingExistenceOfItemOrderByProductId(productId, e);
             throw new ClientErrorException("Erro ao verificar existência do item do pedido pelo id do produto.");
         }
     }
@@ -117,6 +120,7 @@ public class ItemOrderRepository {
             return !resultList.isEmpty();
 
         } catch (Exception e) {
+            logUnexpectedErrorCheckingExistenceOfItemOrderByClientId(clientId, e);
             throw new ClientErrorException("Erro ao verificar existência do item do pedido pelo id do cliente.");
         }
     }
@@ -193,6 +197,7 @@ public class ItemOrderRepository {
             logFindFilteredItemOrdersSuccessfully();
             return itemOrdersList;
         } catch (Exception e) {
+            logUnexpectedErrorOnFindFilteredItemOrders(e);
             throw new ClientErrorException("Erro ao buscar itens de produtos filtrados.");
         }
     }
@@ -345,6 +350,7 @@ public class ItemOrderRepository {
             return fullDetailsList;
 
         } catch (Exception e) {
+            logUnexpectedErrorOnFindFullDetailsItemOrders(e);
             throw new ClientErrorException("Erro ao buscar item dos pedidos filtrados com todos detalhes.");
         }
     }

@@ -155,6 +155,7 @@ public class ItemOrderService {
     private void validateFilteredItemOrdersId(UUID id) {
         logFilterItemOrderIdValidation(id);
         if (nonNull(id) && !itemOrderRepository.existsItemOrderById(id)) {
+            logItemOrderNotFoundById(id);
             throw new ClientErrorException("O ID do item do pedido informado não está cadastrado.");
         }
     }
@@ -169,6 +170,7 @@ public class ItemOrderService {
     private void validateFilteredProductId(UUID productId) {
         logFilterItemOrderProductIdValidation(productId);
         if (nonNull(productId) &&!productRepository.existsProductById(productId)) {
+            logItemOrderNotFoundByProductId(productId);
             throw new ClientErrorException("O ID do produto informado não está cadastrado.");
         }
 
@@ -177,6 +179,7 @@ public class ItemOrderService {
     private void validateFilteredFullDetailsOrderId(UUID orderId) {
         validateFilteredOrderId(orderId);
         if (nonNull(orderId) && !itemOrderRepository.existsItemOrderByOrderId(orderId)) {
+            logItemOrderNotFoundByOrderId(orderId);
             throw new ClientErrorException("Nenhum item de pedido cadastrado com o ID do pedido informado.");
         }
 
@@ -197,6 +200,7 @@ public class ItemOrderService {
                 throw new ClientErrorException("O ID do cliente informado não está cadastrado.");
             }
             if (!orderRepository.existsOrderByClientId(clientId)) {
+                logItemOrderNotFoundByClientId(clientId);
                 throw new ClientErrorException("Nenhum pedido cadastrado com o ID do cliente informado.");
             }
             if (!itemOrderRepository.existsItemOrderByClientId(clientId)) {
