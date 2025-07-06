@@ -115,7 +115,6 @@ http://localhost:8080
 - Validações manuais aplicadas nos serviços, com mensagens de erro personalizadas
 - Implementação de filtros dinâmicos, paginação e ordenação
 - Tratamento global de exceções através de um Global Exception Handler
-- Implementação de logs (em desenvolvimento)
 
 ---
 
