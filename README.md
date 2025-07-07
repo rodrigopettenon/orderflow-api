@@ -85,26 +85,80 @@ http://localhost:8080
 
 ## Endpoints Disponíveis
 
-### Clientes
-- POST `/clients` – Cadastrar cliente
-- GET `/clients/all` – Listagem paginada de clientes
-- GET `/clients/filtered` – Consulta com filtros por nome, e-mail ou ID
+Clientes (/clients)
+POST /save
+Cadastra um novo cliente.
 
-### Produtos
-- POST `/products` – Cadastrar produto
-- GET `/products/all` – Listagem paginada de produtos
-- GET `/products/filtered` – Consulta com filtros por nome, SKU ou preço
+GET /email/{email}
+Busca cliente por e-mail.
 
-### Pedidos
-- POST `/orders` – Cadastrar pedido
-- GET `/orders/all` – Listagem paginada de pedidos
-- GET `/orders/filtered` – Consulta com filtros por cliente, status ou data
+GET /cpf/{cpf}
+Busca cliente por CPF.
 
-### Itens de Pedido
-- POST `/item-orders` – Cadastrar item de pedido
-- GET `/item-orders/all` – Listagem paginada de itens de pedido
-- GET `/item-orders/filtered` – Consulta com filtros por pedido, produto ou quantidade
-- GET `/item-orders/full-details` – Consulta detalhada utilizando INNER JOIN, retornando os dados completos do item, pedido, produto e cliente
+GET /all
+Retorna todos os clientes com paginação e ordenação.
+Parâmetros: page, linesPerPage, direction, orderBy
+
+GET /filter
+Busca clientes por filtros.
+Parâmetros: name, email, cpf, birthStart, birthEnd, page, linesPerPage, direction, orderBy
+
+PUT /update/{cpf}
+Atualiza os dados de um cliente com base no CPF.
+
+DELETE /delete/{cpf}
+Deleta um cliente com base no CPF.
+
+Produtos (/products)
+POST /save
+Cadastra um novo produto.
+
+GET /sku?sku={sku}
+Busca produto por SKU.
+
+GET /all
+Retorna todos os produtos com paginação e ordenação.
+Parâmetros: page, linesPerPage, direction, orderBy
+
+GET /filter
+Busca produtos por filtros.
+Parâmetros: name, sku, minPrice, maxPrice, page, linesPerPage, direction, orderBy
+
+PUT /update?sku={sku}
+Atualiza os dados de um produto com base no SKU.
+
+DELETE /delete?sku={sku}
+Deleta um produto com base no SKU.
+
+Pedidos (/orders)
+POST /save
+Cadastra um novo pedido.
+
+GET /id?id={id}
+Busca um pedido por ID.
+
+GET /filter
+Busca pedidos com base em filtros.
+Parâmetros: id, clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy
+
+GET /details
+Busca pedidos com detalhes (quantidade mínima/máxima de itens, status etc).
+Parâmetros: orderId, clientId, dateTimeStart, dateTimeEnd, minQuantity, maxQuantity, status, page, linesPerPage, direction, orderBy
+
+PUT /update?id={id}&status={status}
+Atualiza o status de um pedido pelo ID.
+
+Itens de Pedido (/item-orders)
+POST /save
+Cadastra um novo item de pedido.
+
+GET /filter
+Busca itens de pedido com base em filtros.
+Parâmetros: id, orderId, productId, minQuantity, maxQuantity, page, linesPerPage, direction, orderBy
+
+GET /full-details
+Busca itens de pedido com detalhes (cliente, pedido, produto etc).
+Parâmetros: itemOrderId, productId, orderId, clientId, page, linesPerPage, direction, orderBy
 
 ---
 
