@@ -83,83 +83,92 @@ http://localhost:8080
 
 ---
 
-## Endpoints Disponíveis
+### Endpoints Disponíveis
 
-Clientes (/clients)
-POST /save
-Cadastra um novo cliente.
+#### Clientes (`/clients`)
 
-GET /email/{email}
-Busca cliente por e-mail.
+- **POST** `/save`  
+  Cadastra um novo cliente.
 
-GET /cpf/{cpf}
-Busca cliente por CPF.
+- **GET** `/email/{email}`  
+  Busca cliente por e-mail.
 
-GET /all
-Retorna todos os clientes com paginação e ordenação.
-Parâmetros: page, linesPerPage, direction, orderBy
+- **GET** `/cpf/{cpf}`  
+  Busca cliente por CPF.
 
-GET /filter
-Busca clientes por filtros.
-Parâmetros: name, email, cpf, birthStart, birthEnd, page, linesPerPage, direction, orderBy
+- **GET** `/all`  
+  Retorna todos os clientes com paginação e ordenação.  
+  **Parâmetros:** `page`, `linesPerPage`, `direction`, `orderBy`
 
-PUT /update/{cpf}
-Atualiza os dados de um cliente com base no CPF.
+- **GET** `/filter`  
+  Busca clientes por filtros.  
+  **Parâmetros:** `name`, `email`, `cpf`, `birthStart`, `birthEnd`, `page`, `linesPerPage`, `direction`, `orderBy`
 
-DELETE /delete/{cpf}
-Deleta um cliente com base no CPF.
+- **PUT** `/update/{cpf}`  
+  Atualiza os dados de um cliente com base no CPF.
 
-Produtos (/products)
-POST /save
-Cadastra um novo produto.
+- **DELETE** `/delete/{cpf}`  
+  Deleta um cliente com base no CPF.
 
-GET /sku?sku={sku}
-Busca produto por SKU.
+---
 
-GET /all
-Retorna todos os produtos com paginação e ordenação.
-Parâmetros: page, linesPerPage, direction, orderBy
+#### Produtos (`/products`)
 
-GET /filter
-Busca produtos por filtros.
-Parâmetros: name, sku, minPrice, maxPrice, page, linesPerPage, direction, orderBy
+- **POST** `/save`  
+  Cadastra um novo produto.
 
-PUT /update?sku={sku}
-Atualiza os dados de um produto com base no SKU.
+- **GET** `/sku?sku={sku}`  
+  Busca produto por SKU.
 
-DELETE /delete?sku={sku}
-Deleta um produto com base no SKU.
+- **GET** `/all`  
+  Retorna todos os produtos com paginação e ordenação.  
+  **Parâmetros:** `page`, `linesPerPage`, `direction`, `orderBy`
 
-Pedidos (/orders)
-POST /save
-Cadastra um novo pedido.
+- **GET** `/filter`  
+  Busca produtos por filtros.  
+  **Parâmetros:** `name`, `sku`, `minPrice`, `maxPrice`, `page`, `linesPerPage`, `direction`, `orderBy`
 
-GET /id?id={id}
-Busca um pedido por ID.
+- **PUT** `/update?sku={sku}`  
+  Atualiza os dados de um produto com base no SKU.
 
-GET /filter
-Busca pedidos com base em filtros.
-Parâmetros: id, clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy
+- **DELETE** `/delete?sku={sku}`  
+  Deleta um produto com base no SKU.
 
-GET /details
-Busca pedidos com detalhes (quantidade mínima/máxima de itens, status etc).
-Parâmetros: orderId, clientId, dateTimeStart, dateTimeEnd, minQuantity, maxQuantity, status, page, linesPerPage, direction, orderBy
+---
 
-PUT /update?id={id}&status={status}
-Atualiza o status de um pedido pelo ID.
+#### Pedidos (`/orders`)
 
-Itens de Pedido (/item-orders)
-POST /save
-Cadastra um novo item de pedido.
+- **POST** `/save`  
+  Cadastra um novo pedido.
 
-GET /filter
-Busca itens de pedido com base em filtros.
-Parâmetros: id, orderId, productId, minQuantity, maxQuantity, page, linesPerPage, direction, orderBy
+- **GET** `/id?id={id}`  
+  Busca um pedido por ID.
 
-GET /full-details
-Busca itens de pedido com detalhes (cliente, pedido, produto etc).
-Parâmetros: itemOrderId, productId, orderId, clientId, page, linesPerPage, direction, orderBy
+- **GET** `/filter`  
+  Busca pedidos com base em filtros.  
+  **Parâmetros:** `id`, `clientId`, `dateTimeStart`, `dateTimeEnd`, `status`, `page`, `linesPerPage`, `direction`, `orderBy`
 
+- **GET** `/details`  
+  Busca pedidos com detalhes (quantidade mínima/máxima de itens, status etc).  
+  **Parâmetros:** `orderId`, `clientId`, `dateTimeStart`, `dateTimeEnd`, `minQuantity`, `maxQuantity`, `status`, `page`, `linesPerPage`, `direction`, `orderBy`
+
+- **PUT** `/update?id={id}&status={status}`  
+  Atualiza o status de um pedido pelo ID.
+
+---
+
+#### Itens de Pedido (`/item-orders`)
+
+- **POST** `/save`  
+  Cadastra um novo item de pedido.
+
+- **GET** `/filter`  
+  Busca itens de pedido com base em filtros.  
+  **Parâmetros:** `id`, `orderId`, `productId`, `minQuantity`, `maxQuantity`, `page`, `linesPerPage`, `direction`, `orderBy`
+
+- **GET** `/full-details`  
+  Busca itens de pedido com detalhes (cliente, pedido, produto etc).  
+  **Parâmetros:** `itemOrderId`, `productId`, `orderId`, `clientId`, `page`, `linesPerPage`, `direction`, `orderBy`
 ---
 
 ## Arquitetura e Boas Práticas
