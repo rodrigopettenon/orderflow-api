@@ -474,6 +474,84 @@ public class OrderRepository {
         }
     }
 
+    public GlobalPageDto<RelevantOrderDataDto> findFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
+                                                                             String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
+
+        List<RelevantOrderDataDto> results = queryFindFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy);
+
+        GlobalPageDto<RelevantOrderDataDto> relevantOrderDataPage = new GlobalPageDto<>();
+
+        relevantOrderDataPage.setItems(results);
+
+        return relevantOrderDataPage;
+
+    }
+
+    private List<RelevantOrderDataDto> queryFindFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
+                                                                          String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
+        try {
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT o.id, c.name, o.order_date, o.status, i.product_id, i.quantity, i.price ");
+            sql.append(" FROM tb_orders o ");
+            sql.append(" JOIN tb_clients c ON o.client_id = c.id ");
+            sql.append(" JOIN tb_item_orders i ON i.order_id = o.id ");
+            sql.append(" WHERE 1=1 ");
+
+            if (nonNull(clientId)) {
+                sql.append(" c.id = :clientId ");
+                parameters.put("clientId", clientId);
+            }
+            if (nonNull(dateTimeStart)) {
+                sql.append(" o.order_date >= :dateTimeStart ");
+                parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (nonNull(dateTimeEnd)) {
+                sql.append(" o.order_date <= :dateTimeEnd ");
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (nonNull(status)) {
+                sql.append(" o.status = :status ");
+                parameters.put("status", status);
+            }
+
+            sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", linesPerPage)
+                    .setParameter("offset", page * linesPerPage);
+
+            setQueryParameters(parameters, query);
+
+            List<Object[]> resultList = query.getResultList();
+            List<RelevantOrderDataDto> orderDataDtoList = new ArrayList<>();
+
+            for (Object[] result : resultList) {
+                RelevantOrderDataDto relevantOrderDataDto = new RelevantOrderDataDto();
+
+                relevantOrderDataDto.setOrderId(UUID.fromString((String) result[0]));
+                relevantOrderDataDto.setClientName((String) result[1]);
+                relevantOrderDataDto.setOrderDate(((Timestamp) result[2]).toLocalDateTime());
+                relevantOrderDataDto.setStatus((String) result[3]);
+                relevantOrderDataDto.setProductId(UUID.fromString((String) result[4]));
+
+                Integer quantity = ((Number) result[5]).intValue();
+                Double unitPrice = ((Number) result[6]).doubleValue();
+
+                relevantOrderDataDto.setQuantity(quantity);
+                relevantOrderDataDto.setTotalAmount(unitPrice * quantity);
+
+                orderDataDtoList.add(relevantOrderDataDto);
+            }
+
+            return orderDataDtoList;
+        }catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar dados relevantes do(s) pedido(s) filtrado(s).");
+        }
+    }
+
     private void setQueryParameters(Map<String, Object> parameters, Query query) {
         for (Map.Entry<String, Object> param : parameters.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());

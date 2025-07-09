@@ -281,6 +281,9 @@ public class LogUtil {
         logStartOfProcess("checagem de existência do pedido pelo id do cliente", clientId);
     }
 
+    public static void logFindFilteredRelevantOrderDataStart() {
+        logStartOfProcess("busca de pedidos com dados relevantes", null);
+    }
 
     //ItemOrder
     public static void logFindFilteredItemOrdersStart() {

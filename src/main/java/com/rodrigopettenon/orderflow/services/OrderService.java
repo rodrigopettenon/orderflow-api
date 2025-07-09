@@ -3,6 +3,7 @@ package com.rodrigopettenon.orderflow.services;
 import com.rodrigopettenon.orderflow.dtos.GlobalFullDetailsDto;
 import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.dtos.OrderDto;
+import com.rodrigopettenon.orderflow.dtos.RelevantOrderDataDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
 import com.rodrigopettenon.orderflow.models.OrderModel;
@@ -38,7 +39,8 @@ public class OrderService{
             "order_status", "o.status",
             "client_id", "c.id",
             "item_quantity", "i.quantity",
-            "item_price", "i.price");
+            "item_price", "i.price",
+            "client_name", "c.name");
 
     @Autowired
     private OrderRepository orderRepository;
@@ -126,7 +128,23 @@ public class OrderService{
 
         return orderRepository.findFilteredOrdersDetails(orderId, clientId, dateTimeStart, dateTimeEnd,
                 minQuantity, maxQuantity, status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
+    }
 
+    public GlobalPageDto<RelevantOrderDataDto> findFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
+                                                                             String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
+        logFindFilteredRelevantOrderDataStart();
+
+        validateFilterClientId(clientId);
+        validateFilteredDateTimeStartAndDateTimeEndDetails(dateTimeStart, dateTimeEnd);
+        validateFilterOrderStatus(status);
+
+        Integer fixedPage = fixPageFilter(page);
+        Integer fixedLinesPerPage = fixLinesPerPageFilter(linesPerPage);
+        String fixedDirection = fixDirectionFilter(direction);
+        String fixedOrderBy = fixOrderByFilteredDetails(orderBy);
+
+        return orderRepository.findFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd,
+                status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     private void validateFilteredDateTimeStartAndDateTimeEndDetails(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {

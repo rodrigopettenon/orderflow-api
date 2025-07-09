@@ -52,7 +52,17 @@ public class OrderController extends BaseController{
                 status, page, linesPerPage, direction, orderBy));
     }
 
-
+    @GetMapping("relevant-data")
+    public ResponseEntity<?> findFilteredRelevantOrderData(@RequestParam(required = false) Long clientId,
+                                                           @RequestParam(required = false) LocalDateTime dateTimeStart,
+                                                           @RequestParam(required = false) LocalDateTime dateTimeEnd,
+                                                           @RequestParam(required = false) String status,
+                                                           @RequestParam(defaultValue = "0") Integer page,
+                                                           @RequestParam(name = "linesPerPage", defaultValue = "10") Integer linesPerPage,
+                                                           @RequestParam(name = "direction", defaultValue = "asc") String direction,
+                                                           @RequestParam(name = "orderBy", defaultValue = "client_name") String orderBy) {
+        return createObjectReturn(orderService.findFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy));
+    }
 
     @GetMapping("/id")
     public ResponseEntity<?> findById(@RequestParam UUID id) {
