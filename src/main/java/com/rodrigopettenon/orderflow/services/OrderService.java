@@ -83,9 +83,9 @@ public class OrderService{
         validateFilterOrderId(id);
         validateFilterClientId(clientId);
         validateFilterOrderDateTimeStartAndDateTimeEnd(dateTimeStart, dateTimeEnd);
-        validateFilterOrderStatus(status);
+        String validatedStatus = validateFilterOrderStatus(status);
 
-        return orderRepository.findFilteredOrders(id, clientId, dateTimeStart, dateTimeEnd, status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
+        return orderRepository.findFilteredOrders(id, clientId, dateTimeStart, dateTimeEnd, validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     public OrderDto findById(UUID id) {
@@ -120,14 +120,14 @@ public class OrderService{
         validateFilterClientId(clientId);
         validateFilteredDateTimeStartAndDateTimeEndDetails(dateTimeStart, dateTimeEnd);
         itemOrderService.validateFilteredMinQuantityAndMaxQuantity(minQuantity, maxQuantity);
-        validateFilterOrderStatus(status);
+        String validatedStatus = validateFilterOrderStatus(status);
         Integer fixedPage = fixPageFilter(page);
         Integer fixedLinesPerPage = fixLinesPerPageFilter(linesPerPage);
         String fixedDirection = fixDirectionFilter(direction);
         String fixedOrderBy = fixOrderByFilteredDetails(orderBy);
 
         return orderRepository.findFilteredOrdersDetails(orderId, clientId, dateTimeStart, dateTimeEnd,
-                minQuantity, maxQuantity, status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
+                minQuantity, maxQuantity, validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     public GlobalPageDto<RelevantOrderDataDto> findFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
@@ -136,7 +136,7 @@ public class OrderService{
 
         validateFilterClientId(clientId);
         validateFilteredDateTimeStartAndDateTimeEndDetails(dateTimeStart, dateTimeEnd);
-        validateFilterOrderStatus(status);
+        String validatedStatus = validateFilterOrderStatus(status);
 
         Integer fixedPage = fixPageFilter(page);
         Integer fixedLinesPerPage = fixLinesPerPageFilter(linesPerPage);
@@ -144,7 +144,7 @@ public class OrderService{
         String fixedOrderBy = fixOrderByFilteredDetails(orderBy);
 
         return orderRepository.findFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd,
-                status, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
+                validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     private void validateFilteredDateTimeStartAndDateTimeEndDetails(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
@@ -270,13 +270,15 @@ public class OrderService{
         }
     }
 
-    private void validateFilterOrderStatus(String status) {
+    private String validateFilterOrderStatus(String status) {
         logFilterOrderStatusValidation(status);
         try {
             if (isNotBlank(status)) {
                 String sanitizedStatus = removeAllSpaces(status.toUpperCase());
                 OrderStatus.valueOf(sanitizedStatus);
+                return sanitizedStatus.toUpperCase();
             }
+            return null;
         } catch (IllegalArgumentException e) {
             throw new ClientErrorException("O status informado é inválido: " + status);
         }

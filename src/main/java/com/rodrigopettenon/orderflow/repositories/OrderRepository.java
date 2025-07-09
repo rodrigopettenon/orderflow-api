@@ -10,6 +10,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -477,15 +479,58 @@ public class OrderRepository {
     public GlobalPageDto<RelevantOrderDataDto> findFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
                                                                              String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
 
+        Long total = queryCountFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd, status);
+
         List<RelevantOrderDataDto> results = queryFindFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy);
 
         GlobalPageDto<RelevantOrderDataDto> relevantOrderDataPage = new GlobalPageDto<>();
-
+        relevantOrderDataPage.setTotal(total);
         relevantOrderDataPage.setItems(results);
 
         return relevantOrderDataPage;
 
     }
+
+    private Long queryCountFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd, String status) {
+        try {
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT COUNT(*) ");
+            sql.append(" FROM tb_orders o ");
+            sql.append(" JOIN tb_clients c ON o.client_id = c.id ");
+            sql.append(" JOIN tb_item_orders i ON i.order_id = o.id ");
+            sql.append(" WHERE 1=1 ");
+
+            if (nonNull(clientId)) {
+                sql.append(" AND c.id = :clientId ");
+                parameters.put("clientId", clientId);
+            }
+            if (nonNull(dateTimeStart)) {
+                sql.append(" AND o.order_date >= :dateTimeStart ");
+                parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (nonNull(dateTimeEnd)) {
+                sql.append(" AND o.order_date <= :dateTimeEnd ");
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (nonNull(status)) {
+                sql.append(" AND o.status = :status ");
+                parameters.put("status", status);
+            }
+
+            Query query = em.createNativeQuery(sql.toString());
+
+            setQueryParameters(parameters, query);
+
+            Object result = query.getSingleResult();
+            Number total = (Number) result;
+
+            return total.longValue();
+        }catch (Exception e) {
+            throw new ClientErrorException("Erro ao contar pedidos com dados relevantes filtrados.");
+        }
+     }
 
     private List<RelevantOrderDataDto> queryFindFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
                                                                           String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
@@ -500,19 +545,19 @@ public class OrderRepository {
             sql.append(" WHERE 1=1 ");
 
             if (nonNull(clientId)) {
-                sql.append(" c.id = :clientId ");
+                sql.append(" AND c.id = :clientId ");
                 parameters.put("clientId", clientId);
             }
             if (nonNull(dateTimeStart)) {
-                sql.append(" o.order_date >= :dateTimeStart ");
+                sql.append(" AND o.order_date >= :dateTimeStart ");
                 parameters.put("dateTimeStart", dateTimeStart);
             }
             if (nonNull(dateTimeEnd)) {
-                sql.append(" o.order_date <= :dateTimeEnd ");
+                sql.append(" AND o.order_date <= :dateTimeEnd ");
                 parameters.put("dateTimeEnd", dateTimeEnd);
             }
             if (nonNull(status)) {
-                sql.append(" o.status = :status ");
+                sql.append(" AND o.status = :status ");
                 parameters.put("status", status);
             }
 
@@ -537,18 +582,20 @@ public class OrderRepository {
                 relevantOrderDataDto.setStatus((String) result[3]);
                 relevantOrderDataDto.setProductId(UUID.fromString((String) result[4]));
 
-                Integer quantity = ((Number) result[5]).intValue();
-                Double unitPrice = ((Number) result[6]).doubleValue();
+                BigDecimal quantity = BigDecimal.valueOf(((Number) result[5]).intValue());
+                BigDecimal unitPrice = BigDecimal.valueOf(((Number) result[6]).doubleValue());
 
-                relevantOrderDataDto.setQuantity(quantity);
-                relevantOrderDataDto.setTotalAmount(unitPrice * quantity);
+                BigDecimal totalAmount = unitPrice.multiply(quantity).setScale(2, RoundingMode.HALF_EVEN);
+
+                relevantOrderDataDto.setQuantity(quantity.intValue());
+                relevantOrderDataDto.setTotalAmount(totalAmount);
 
                 orderDataDtoList.add(relevantOrderDataDto);
             }
 
             return orderDataDtoList;
         }catch (Exception e) {
-            throw new ClientErrorException("Erro ao buscar dados relevantes do(s) pedido(s) filtrado(s).");
+            throw new ClientErrorException("Erro ao buscar pedidos com dados relevantes filtrados.");
         }
     }
 

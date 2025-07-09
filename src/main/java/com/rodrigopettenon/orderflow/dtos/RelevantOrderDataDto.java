@@ -3,6 +3,7 @@ package com.rodrigopettenon.orderflow.dtos;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ public class RelevantOrderDataDto {
     private String status;
     private UUID productId;
     private Integer quantity;
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     public RelevantOrderDataDto() {
     }
@@ -68,11 +69,11 @@ public class RelevantOrderDataDto {
         this.quantity = quantity;
     }
 
-    public Double getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 }
