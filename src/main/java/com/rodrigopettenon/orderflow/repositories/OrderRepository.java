@@ -599,6 +599,148 @@ public class OrderRepository {
         }
     }
 
+    public GlobalPageDto<ClientSalesReportDto> findFilteredClientSalesReport(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd, Integer minOrder,
+                                                                             Integer maxOrder, String status, Integer page,
+                                                                             Integer linesPerPage, String direction, String orderBy) {
+        Long total = queryCountFilteredClientSalesReport(dateTimeStart, dateTimeEnd, minOrder,
+                maxOrder, status);
+
+        List<ClientSalesReportDto> results = queryFindFilteredClientSalesReport(dateTimeStart, dateTimeEnd, minOrder,
+                maxOrder, status, page, linesPerPage, direction, orderBy);
+
+        GlobalPageDto<ClientSalesReportDto> clientSalesReportPage = new GlobalPageDto<>();
+        clientSalesReportPage.setTotal(total);
+        clientSalesReportPage.setItems(results);
+
+        return clientSalesReportPage;
+    }
+
+    private List<ClientSalesReportDto> queryFindFilteredClientSalesReport(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd, Integer minOrder,
+                                                                          Integer maxOrder, String status, Integer page,
+                                                                          Integer linesPerPage, String direction, String orderBy) {
+        try{
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT c.id, c.name, COUNT(o.id), SUM(i.price * i.quantity) ");
+            sql.append(" FROM tb_orders o ");
+            sql.append(" JOIN tb_item_orders i ON i.order_id = o.id ");
+            sql.append(" JOIN tb_clients c ON c.id = o.client_id ");
+            sql.append(" WHERE 1=1 ");
+
+            if (nonNull(dateTimeStart)) {
+                sql.append(" AND o.order_date >= :dateTimeStart ");
+                parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (nonNull(dateTimeEnd)) {
+                sql.append(" AND o.order_date <= :dateTimeEnd ");
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (nonNull(status)) {
+                sql.append(" AND o.status = :status ");
+                parameters.put("status", status);
+            }
+
+            sql.append(" GROUP BY c.id ");
+            sql.append(" HAVING 1=1 ");
+
+            if (nonNull(minOrder)) {
+                sql.append(" AND COUNT(o.id) >= :minOrder ");
+                parameters.put("minOrder", minOrder);
+            }
+            if (nonNull(maxOrder)) {
+                sql.append(" AND COUNT(o.id) <= :maxOrder ");
+                parameters.put("maxOrder", maxOrder);
+            }
+
+            sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");
+            sql.append(" LIMIT :limit OFFSET :offset ");
+
+            Query query = em.createNativeQuery(sql.toString())
+                    .setParameter("limit", linesPerPage)
+                    .setParameter("offset", page * linesPerPage);
+
+            setQueryParameters(parameters, query);
+
+            List<Object[]> resultList = query.getResultList();
+            List<ClientSalesReportDto> salesReportList = new ArrayList<>();
+
+            for (Object[] result : resultList) {
+                ClientSalesReportDto clientSalesReportDto = new ClientSalesReportDto();
+
+                clientSalesReportDto.setClientId(((Number) result[0]).longValue());
+                clientSalesReportDto.setClientName((String) result[1]);
+                clientSalesReportDto.setTotalOrders(((Number) result[2]).intValue());
+
+                BigDecimal totalAmount = BigDecimal.valueOf(((Number) result[3]).doubleValue())
+                        .setScale(2, RoundingMode.HALF_EVEN);
+
+                clientSalesReportDto.setTotalAmount(totalAmount);
+
+                salesReportList.add(clientSalesReportDto);
+            }
+
+            return salesReportList;
+
+        }catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar relatório de vendas filtrado.");
+        }
+    }
+
+    private Long queryCountFilteredClientSalesReport(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
+                                                     Integer minOrder, Integer maxOrder, String status) {
+        try{
+            Map<String, Object> parameters = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+
+            sql.append(" SELECT COUNT(*) FROM ( ");
+            sql.append(" SELECT c.id ");
+            sql.append(" FROM tb_orders o ");
+            sql.append(" JOIN tb_item_orders i ON i.order_id = o.id ");
+            sql.append(" JOIN tb_clients c ON c.id = o.client_id ");
+            sql.append(" WHERE 1=1 ");
+
+            if (nonNull(dateTimeStart)) {
+                sql.append(" AND o.order_date >= :dateTimeStart ");
+                parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (nonNull(dateTimeEnd)) {
+                sql.append(" AND o.order_date <= :dateTimeEnd ");
+                parameters.put("dateTimeEnd", dateTimeEnd);
+            }
+            if (nonNull(status)) {
+                sql.append(" AND o.status = :status ");
+                parameters.put("status", status);
+            }
+
+            sql.append(" GROUP BY c.id ");
+            sql.append(" HAVING 1=1 ");
+
+            if (nonNull(minOrder)) {
+                sql.append(" AND COUNT(o.id) >= :minOrder ");
+                parameters.put("minOrder", minOrder);
+            }
+            if (nonNull(maxOrder)) {
+                sql.append(" AND COUNT(o.id) <= :maxOrder ");
+                parameters.put("maxOrder", maxOrder);
+            }
+
+            sql.append(" ) subquery ");
+
+            Query query = em.createNativeQuery(sql.toString());
+
+            setQueryParameters(parameters, query);
+
+            Object result = query.getSingleResult();
+            Number total = (Number) result;
+
+            return total.longValue();
+
+        } catch (Exception e) {
+            throw new ClientErrorException("Erro ao contar quantos registros existem no relatório de vendas filtrado.");
+        }
+    }
+
     private void setQueryParameters(Map<String, Object> parameters, Query query) {
         for (Map.Entry<String, Object> param : parameters.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());

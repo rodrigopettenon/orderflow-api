@@ -133,6 +133,16 @@ public class LogUtil {
         logFilterValidation("status do pedido", status);
     }
 
+    public static void logMinOrderFilterValidation(Integer minOrder) {
+        logFilterValidation("mínimo de pedidos", minOrder);
+    }
+
+    public static void logMaxOrderFilterValidation(Integer maxOrder) {
+        logFilterValidation("máximo de pedidos", maxOrder);
+    }
+
+
+
 
     //ItemOrder
     public static void logFilterItemOrderMinQuantityValidation(Integer minQuantity) {
@@ -283,6 +293,10 @@ public class LogUtil {
 
     public static void logFindFilteredRelevantOrderDataStart() {
         logStartOfProcess("busca de pedidos com dados relevantes", null);
+    }
+
+    public static void logFindOrderClientSalesReportStart() {
+        logStartOfProcess("busca de relatório de vendas do cliente", null);
     }
 
     //ItemOrder

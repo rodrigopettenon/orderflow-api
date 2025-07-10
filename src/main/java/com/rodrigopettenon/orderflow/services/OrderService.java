@@ -1,9 +1,6 @@
 package com.rodrigopettenon.orderflow.services;
 
-import com.rodrigopettenon.orderflow.dtos.GlobalFullDetailsDto;
-import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
-import com.rodrigopettenon.orderflow.dtos.OrderDto;
-import com.rodrigopettenon.orderflow.dtos.RelevantOrderDataDto;
+import com.rodrigopettenon.orderflow.dtos.*;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
 import com.rodrigopettenon.orderflow.models.OrderModel;
@@ -34,13 +31,18 @@ public class OrderService{
 
     private static final List<String> ALLOWED_ORDER_BY = Arrays.asList("id", "client_id", "order_date", "status");
     private static final List<String> ALLOWED_DIRECTION = Arrays.asList("asc", "desc");
-    private static final Map<String, String> ORDER_BY_COLUMN_MAP = Map.of(
+    private static final Map<String, String> ORDER_BY_COLUMN_MAP_FILTER = Map.of(
             "order_date", "o.order_date",
             "order_status", "o.status",
             "client_id", "c.id",
             "item_quantity", "i.quantity",
             "item_price", "i.price",
             "client_name", "c.name");
+    private static final Map<String, String> ORDER_BY_COLUMN_MAP_SALES_REPORT = Map.of(
+            "client_id", "c.id",
+            "client_name", "c.name",
+            "total_orders", "COUNT(o.id)",
+            "total_amount", "SUM(i.price * i.quantity)");
 
     @Autowired
     private OrderRepository orderRepository;
@@ -145,6 +147,40 @@ public class OrderService{
 
         return orderRepository.findFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd,
                 validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
+    }
+
+    public GlobalPageDto<ClientSalesReportDto> findFilteredClientSalesReport(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
+                                                                             Integer minOrder, Integer maxOrder, String status, Integer page,
+                                                                             Integer linesPerPage, String direction, String orderBy) {
+        logFindOrderClientSalesReportStart();
+
+        validateFilteredDateTimeStartAndDateTimeEndDetails(dateTimeStart, dateTimeEnd);
+        validateMinOrderAndMaxOrderFilter(minOrder, maxOrder);
+        String validatedStatus = validateFilterOrderStatus(status);
+
+        Integer fixedPage = fixPageFilter(page);
+        Integer fixedLinesPerPage = fixLinesPerPageFilter(linesPerPage);
+        String fixedDirection = fixDirectionFilter(direction);
+        String fixedOrderBy = fixOrderByFilteredSalesReport(orderBy);
+
+
+        return orderRepository.findFilteredClientSalesReport(dateTimeStart, dateTimeEnd, minOrder, maxOrder,
+                validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
+    }
+
+    private void validateMinOrderAndMaxOrderFilter(Integer minOrder, Integer maxOrder) {
+        logMinOrderFilterValidation(minOrder);
+        logMaxOrderFilterValidation(maxOrder);
+
+        if (nonNull(minOrder) && minOrder <= 0) {
+            throw new ClientErrorException("O filtro mínimo de pedidos deve ser maior que 0.");
+        }
+        if (nonNull(maxOrder) && maxOrder <=0) {
+            throw new ClientErrorException("O filtro máximo de pedidos deve ser maior que 0.");
+        }
+        if (nonNull(maxOrder) && nonNull(minOrder) && minOrder > maxOrder) {
+            throw new ClientErrorException("O filtro mínimo de pedidos não pode ser maior que o máximo de pedidos informado.");
+        }
     }
 
     private void validateFilteredDateTimeStartAndDateTimeEndDetails(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
@@ -305,8 +341,12 @@ public class OrderService{
         return direction;
     }
 
-    private String fixOrderByFilteredDetails(String orderBy){
-        return ORDER_BY_COLUMN_MAP.getOrDefault(orderBy, "o.order_date");
+    private String fixOrderByFilteredDetails(String orderBy) {
+        return ORDER_BY_COLUMN_MAP_FILTER.getOrDefault(orderBy, "o.order_date");
+    }
+
+    private String fixOrderByFilteredSalesReport(String orderBy) {
+        return ORDER_BY_COLUMN_MAP_SALES_REPORT.getOrDefault(orderBy, "COUNT(o.id)");
     }
 
     private String fixOrderByFilter(String orderBy) {
