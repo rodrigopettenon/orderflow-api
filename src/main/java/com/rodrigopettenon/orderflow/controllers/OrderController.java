@@ -64,19 +64,8 @@ public class OrderController extends BaseController{
         return createObjectReturn(orderService.findFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy));
     }
 
-    @GetMapping("client-sales-report")
-    public ResponseEntity<?> findFilteredClientSalesReport(@RequestParam(required = false) LocalDateTime dateTimeStart,
-                                                           @RequestParam(required = false) LocalDateTime dateTimeEnd,
-                                                           @RequestParam(required = false) Integer minOrder,
-                                                           @RequestParam(required = false) Integer maxOrder,
-                                                           @RequestParam(required = false) String status,
-                                                           @RequestParam(defaultValue = "0") Integer page,
-                                                           @RequestParam(name = "linesPerPage", defaultValue = "10") Integer linesPerPage,
-                                                           @RequestParam(name = "direction", defaultValue = "asc") String direction,
-                                                           @RequestParam(name = "orderBy", defaultValue = "total_order") String orderBy) {
-        return createObjectReturn(orderService.findFilteredClientSalesReport(dateTimeStart, dateTimeEnd, minOrder,
-                maxOrder, status, page, linesPerPage, direction, orderBy));
-    }
+
+
 
     @GetMapping("/id")
     public ResponseEntity<?> findById(@RequestParam UUID id) {

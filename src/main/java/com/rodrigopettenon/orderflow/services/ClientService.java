@@ -238,6 +238,10 @@ public class ClientService {
         if (name.length() <= 3) {
             throw new ClientErrorException("O nome do cliente deve ter mais de 3 caracteres.");
         }
+
+        if (name.length() > 100) {
+            throw new ClientErrorException("O nome do cliente deve ser menor que 100 caracteres.");
+        }
     }
 
     private void validateBirth(LocalDate birth) {
@@ -289,9 +293,6 @@ public class ClientService {
 
         if (isBlank(cpf)) {
             throw new ClientErrorException("O CPF do cliente é obrigatório.");
-        }
-        if (cpf.length() != 11) {
-            throw new ClientErrorException("O CPF do cliente deve conter 11 digitos.");
         }
         if (!isValidCPF(cpf)) {
             throw new ClientErrorException("O CPF do cliente é inválido.");
