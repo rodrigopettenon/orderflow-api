@@ -183,7 +183,7 @@ http://localhost:8080
 
 ## Melhorias Futuras
 
-- Implementação de testes unitários e de integração
+- Implementação de testes unitários e de integração (em andamento)
 - Documentação interativa utilizando Swagger/OpenAPI
 - Implementação de autenticação e controle de acesso
 - Geração de relatórios e exportação de dados
