@@ -65,6 +65,7 @@ public class ClientService {
         return clientPageDto;
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<ClientDto> findFilteredClients(String name, String email,
                                              String cpf, LocalDate birthStart,
                                              LocalDate birthEnd, Integer page,

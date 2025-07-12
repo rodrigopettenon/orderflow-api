@@ -66,6 +66,7 @@ public class ItemOrderService {
         return itemOrderRepository.saveItemOrder(itemOrderModel);
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<ItemOrderDto> findFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
                                                               Integer maxQuantity, Integer page, Integer linesPerPage,
                                                               String direction, String orderBy) {
@@ -85,6 +86,7 @@ public class ItemOrderService {
                 fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<GlobalFullDetailsDto> findFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
                                                                          Long clientId, Integer page, Integer linesPerPage,
                                                                          String direction, String orderBy) {

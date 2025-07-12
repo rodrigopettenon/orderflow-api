@@ -61,7 +61,7 @@ public class ClientRepository {
         }
     }
 
-    public boolean existsClientByCpf(String cpf) {
+    public Boolean existsClientByCpf(String cpf) {
         try{
             String sql = (" SELECT 1 FROM tb_clients WHERE cpf = :cpf LIMIT 1");
 

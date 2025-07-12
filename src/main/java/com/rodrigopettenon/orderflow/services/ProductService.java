@@ -42,6 +42,7 @@ public class ProductService {
         logProductSavedWithSkuSuccessfully(productDto.getSku());
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<ProductDto> findAllProducts(Integer page, Integer linesPerPage, String direction, String orderBy) {
 
         Integer sanitizedPage = sanitizePage(page);
@@ -60,6 +61,7 @@ public class ProductService {
         return productPageDto;
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<ProductDto> findFilteredProducts(String name, String sku, Double minPrice,
                                        Double maxPrice, Integer page, Integer linesPerPage,
                                        String direction, String orderBy) {

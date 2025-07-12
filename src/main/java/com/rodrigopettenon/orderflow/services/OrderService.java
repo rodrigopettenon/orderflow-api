@@ -73,6 +73,7 @@ public class OrderService{
         return orderRepository.saveOrder(orderModel);
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<OrderDto> findFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
                                             LocalDateTime dateTimeEnd, String status, Integer page,
                                             Integer linesPerPage, String direction, String orderBy) {
@@ -90,6 +91,7 @@ public class OrderService{
         return orderRepository.findFilteredOrders(id, clientId, dateTimeStart, dateTimeEnd, validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
+    @Transactional(readOnly = true)
     public OrderDto findById(UUID id) {
         logFindOrderByIdStart(id);
         validateOrderId(id);
@@ -112,6 +114,7 @@ public class OrderService{
         logUpdateOrderStatusByIdSuccessfully(id);
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<GlobalFullDetailsDto> findFilteredOrdersDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
                                                                          Integer minQuantity, Integer maxQuantity, String status, Integer page,
                                                                          Integer linesPerPage, String direction, String orderBy) {
@@ -132,6 +135,7 @@ public class OrderService{
                 minQuantity, maxQuantity, validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<RelevantOrderDataDto> findFilteredRelevantOrderData(Long clientId, LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
                                                                              String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
         logFindFilteredRelevantOrderDataStart();
@@ -149,6 +153,7 @@ public class OrderService{
                 validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
+    @Transactional(readOnly = true)
     public GlobalPageDto<ClientSalesReportDto> findFilteredClientSalesReport(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd,
                                                                              Integer minOrder, Integer maxOrder, String status, Integer page,
                                                                              Integer linesPerPage, String direction, String orderBy) {
