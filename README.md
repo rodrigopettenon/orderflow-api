@@ -64,7 +64,7 @@ Observação: As tabelas devem ser criadas manualmente no banco de dados.
 
 ### Execução
 
-- Executar pela IDE: Rodar a classe principal `CadastroEConsultaApplication.java`.
+- Executar pela IDE: Rodar a classe principal `OrderFlowApplication.java`.
 - Executar pelo terminal:
 
 Linux/macOS:
