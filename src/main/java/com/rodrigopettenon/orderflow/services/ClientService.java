@@ -16,6 +16,7 @@ import java.util.List;
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
 import static com.rodrigopettenon.orderflow.utils.StringsValidation.*;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Service
@@ -82,11 +83,10 @@ public class ClientService {
         String fixedDirection = resolveDirectionOrDefault(direction);
         String fixedOrderBy = resolveOrderByOrDefault(orderBy);
 
-        LocalDate validatedBirthStart = validateBirthStart(birthStart, birthEnd);
-        LocalDate validatedBirthEnd = validateBirthEnd(birthEnd, birthStart);
+        validateBirthStartAndBirthEnd(birthStart, birthEnd);
 
-        return clientRepository.findFilteredClients(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, validatedBirthStart,
-                validatedBirthEnd, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
+        return clientRepository.findFilteredClients(validatedNameFilter, validatedEmailFilter, validatedCpfFilter, birthStart,
+                birthEnd, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     @Transactional(readOnly = true)
@@ -160,9 +160,6 @@ public class ClientService {
         if(isBlank(validatedCpfFilter)) {
             return null;
         }
-        if (validatedCpfFilter.length() != 11) {
-            throw new ClientErrorException("O CPF do cliente deve conter 11 digitos.");
-        }
         if (!isValidCPF(validatedCpfFilter)) {
             throw new ClientErrorException("O CPF do cliente é inválido.");
         }
@@ -170,32 +167,19 @@ public class ClientService {
         return validatedCpfFilter;
     }
 
-    private LocalDate validateBirthStart(LocalDate birthStart, LocalDate birthEnd) {
+    private void validateBirthStartAndBirthEnd(LocalDate birthStart, LocalDate birthEnd) {
         logClientBirthStartFilterValidation(birthStart);
-        if (isNull(birthStart) || isNull(birthEnd)) {
-            return null;
-        }
-        if (birthStart.isAfter(LocalDate.now())) {
-            throw new ClientErrorException("A data de nascimento de ínicio não pode ser futura.");
-        }
-        if (birthStart.isAfter(birthEnd)) {
-            throw new ClientErrorException("A data de nascimento de ínicio não pode ser maior que a data final.");
-        }
-        return birthStart;
-    }
-
-    private LocalDate validateBirthEnd(LocalDate birthEnd, LocalDate birthStart) {
         logClientBirthEndFilterValidation(birthEnd);
-        if(isNull(birthStart) || isNull(birthEnd)) {
-            return null;
+
+        if (nonNull(birthStart) && birthStart.isAfter(LocalDate.now())) {
+            throw new ClientErrorException("A data de nascimento de início não pode ser futura.");
         }
-        if (birthEnd.isAfter(LocalDate.now())) {
+        if (nonNull(birthEnd) && birthEnd.isAfter(LocalDate.now())) {
             throw new ClientErrorException("A data de nascimento final não pode ser futura.");
         }
-        if (birthEnd.isBefore(birthStart)) {
-            throw new ClientErrorException("A data de nascimento final não pode ser menor que a data de ínicio. ");
+        if (nonNull(birthStart) && nonNull(birthEnd) && birthStart.isAfter(birthEnd)) {
+            throw new ClientErrorException("A data de nascimento de início não pode ser maior que a data final.");
         }
-        return birthEnd;
     }
 
     // Validações page, linesPerPage, direction e OrderBy paginação

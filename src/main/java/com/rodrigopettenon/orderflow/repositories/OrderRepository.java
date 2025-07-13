@@ -231,9 +231,12 @@ public class OrderRepository {
                 sql.append(" AND client_id = :client_id ");
                 parameters.put("client_id", clientId);
             }
-            if (nonNull(dateTimeStart) && nonNull(dateTimeEnd)) {
-                sql.append(" AND order_date >= :dateTimeStart AND order_date < :dateTimeEnd ");
+            if (nonNull(dateTimeStart)) {
+                sql.append(" AND order_date >= :dateTimeStart ");
                 parameters.put("dateTimeStart", dateTimeStart);
+            }
+            if (nonNull(dateTimeEnd)) {
+                sql.append(" AND order_date <= :dateTimeEnd ");
                 parameters.put("dateTimeEnd", dateTimeEnd);
             }
             if (isNotBlank(status)) {

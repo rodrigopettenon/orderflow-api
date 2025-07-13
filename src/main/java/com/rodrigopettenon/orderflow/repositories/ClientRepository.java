@@ -337,8 +337,11 @@ public class ClientRepository {
                 parameters.put("cpf", cpf);
             }
             if (nonNull(birthStart) && nonNull(birthEnd)) {
-                sql.append(" AND birth_date BETWEEN :birthStart AND :birthEnd ");
+                sql.append(" AND birth_date >= :birthStart ");
                 parameters.put("birthStart", birthStart);
+            }
+            if (nonNull(birthEnd)) {
+                sql.append(" AND birth_date <= :birthEnd ");
                 parameters.put("birthEnd", birthEnd);
             }
 

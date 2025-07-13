@@ -40,11 +40,11 @@ public class ClientController extends BaseController{
 
     @GetMapping("/filter")
     public ResponseEntity<?> findFilteredClients(
-            @RequestParam(value = "name", defaultValue = "") String  name,
-            @RequestParam(value = "email", defaultValue = "") String email,
-            @RequestParam(value = "cpf", defaultValue = "") String cpf,
-            @RequestParam(value = "birthStart", defaultValue = "") LocalDate birthStart,
-            @RequestParam(value = "birthEnd", defaultValue = "") LocalDate birthEnd,
+            @RequestParam(required = false) String  name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String cpf,
+            @RequestParam(required = false) LocalDate birthStart,
+            @RequestParam(required = false) LocalDate birthEnd,
             @RequestParam(defaultValue = "0")Integer page,
             @RequestParam(value = "linesPerPage", defaultValue = "10") Integer linesPerPage,
             @RequestParam(value = "direction", defaultValue = "asc") String direction,

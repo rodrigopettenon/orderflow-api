@@ -195,10 +195,8 @@ public class OrderService{
         if (nonNull(dateTimeStart) && dateTimeStart.isAfter(LocalDateTime.now())) {
             throw new ClientErrorException("O filtro data/hora de ínicio não pode estar no futuro.");
         }
-        if (nonNull(dateTimeStart) && !isNull(dateTimeEnd)) {
-            if (dateTimeEnd.isBefore(dateTimeStart)) {
-                throw new ClientErrorException("O filtro data/hora de ínicio não pode ser após a data final.");
-            }
+        if (nonNull(dateTimeStart) && nonNull(dateTimeEnd) && dateTimeEnd.isBefore(dateTimeStart)) {
+            throw new ClientErrorException("O filtro data/hora de ínicio não pode ser após a data final.");
         }
         if (nonNull(dateTimeEnd) && dateTimeEnd.isAfter(LocalDateTime.now())) {
             throw new ClientErrorException("O filtro data/hora final não pode estar no futuro.");
@@ -292,23 +290,17 @@ public class OrderService{
     private void validateFilterOrderDateTimeStartAndDateTimeEnd(LocalDateTime dateTimeStart, LocalDateTime dateTimeEnd) {
         logFilterOrderDateTimeStartValidation(dateTimeStart);
         logFilterOrderDateTimeEndValidation(dateTimeEnd);
-        if (nonNull(dateTimeStart) && isNull(dateTimeEnd)) {
-            throw new ClientErrorException("Não é permitido preencher apenas data/hora ínicio.");
+
+        if (nonNull(dateTimeStart) && dateTimeStart.isAfter(LocalDateTime.now())) {
+            throw new ClientErrorException("O filtro data/hora de ínicio não pode ser uma data futura.");
         }
-        if (isNull(dateTimeStart) && nonNull(dateTimeEnd)) {
-            throw new ClientErrorException("Não é permitido preencher apenas data/hora final.");
+        if (nonNull(dateTimeStart) && nonNull(dateTimeEnd) && dateTimeStart.isAfter(dateTimeEnd)) {
+            throw new ClientErrorException("O filtro data/hora de ínicio não pode ser posterior ao data/hora final.");
         }
-        if (nonNull(dateTimeStart) && nonNull(dateTimeEnd)) {
-            if (dateTimeStart.isAfter(LocalDateTime.now())) {
-                throw new ClientErrorException("O filtro data/hora de ínicio não pode ser uma data futura.");
-            }
-            if (dateTimeStart.isAfter(dateTimeEnd)) {
-                throw new ClientErrorException("O filtro data/hora de ínicio não pode ser posterior ao data/hora final.");
-            }
-            if (dateTimeEnd.isAfter(LocalDateTime.now())) {
-                throw new ClientErrorException("O filtro data/hora final não pode ser uma data futura.");
-            }
+        if (nonNull(dateTimeEnd) && dateTimeEnd.isAfter(LocalDateTime.now())) {
+            throw new ClientErrorException("O filtro data/hora final não pode ser uma data futura.");
         }
+
     }
 
     private String validateFilterOrderStatus(String status) {

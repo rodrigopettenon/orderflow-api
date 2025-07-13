@@ -1,6 +1,7 @@
 package com.rodrigopettenon.orderflow.services;
 
 import com.rodrigopettenon.orderflow.dtos.ClientDto;
+import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.repositories.ClientRepository;
 import com.rodrigopettenon.orderflow.utils.LogUtil;
@@ -14,6 +15,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -871,6 +874,516 @@ class ClientServiceTest {
         // Verificamos que o método updateClientByCpf nunca foi chamado (porque falhou antes)
         verify(clientRepository, never()).updateClientByCpf(any(), any());
     }
+
+    // Método deleteByCpf
+    @Test
+    @DisplayName("Should successfully delete the client by cpf.")
+    void shouldSuccessfullyDeleteClientByCpf() {
+        // Arrange (informamos um CPF válido para a deleção do cliente)
+        String cpf = "25654428071"; // CPF normalizado e válido
+
+        // Simulamos que o CPF existe no nosso banco
+        when(clientRepository.existsClientByCpf(cpf)).thenReturn(true);
+
+        // executamos a ação que queremos testar
+        clientService.deleteByCpf(cpf);
+
+        // Confirmamos que o repository foi usado porque tudo deu certo
+        verify(clientRepository).deleteClientByCpf(cpf);
+    }
+
+
+    @Test
+    @DisplayName("Should ThrowException when cpf is not registered for deletion.")
+    void shouldThrowExceptionWhenCpfIsNotRegisteredForDeletion() {
+        // Arrange (informamos um CPF "inexistente no banco")
+        String cpf = "16465154048"; // CPF válido e normalizado "que trataremos como inexistente"
+
+        // Simulamos que o CPF não existe no banco
+        when(clientRepository.existsClientByCpf(cpf)).thenReturn(false);
+
+        // Afirmamos que houve uma exceção pois o CPF não existe no banco
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+           clientService.deleteByCpf(cpf);
+        });
+
+        // Verificamos que a mensagem de erro é igual a esperada
+        assertEquals("Nenhum cliente cadastrado com esse CPF.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).deleteClientByCpf(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when cpf is invalid for deletion.")
+    void shouldThrowExceptionWhenCpfIsInvalidForDeletion() {
+        // Arrange (informamos um cpf inválido)
+        String cpf = "22222222222"; // CPF inválido
+
+        // Afirmamos uma exceção pois o CPF é inválido
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+           clientService.deleteByCpf(cpf);
+        });
+
+        // Verificamos que a mensagem é igual a esperada
+        assertEquals("O CPF do cliente é inválido.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).deleteClientByCpf(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when cpf is null for deletion.")
+    void shouldThrowExceptionWhenCpfIsNullForDeletion() {
+        // Arrange (Informamos um CPF nulo)
+        String cpf = null; // CPF nulo
+
+        // Afirmamos uma exceção pois o CPF é nulo
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientService.deleteByCpf(cpf);
+        });
+
+        // Verificamos que a mensagem é igual a esperada
+        assertEquals("O CPF do cliente é obrigatório.", exception.getMessage());
+
+        // Verificamos que o método do repository nunca foi usado (porque falhou antes)
+        verify(clientRepository, never()).deleteClientByCpf(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when cpf contains blank spaces for deletion.")
+    void shouldThrowExceptionWhenCpfContainsBlankSpacesForDeletion() {
+        // Arrange (informamos um cpf com espaços em branco)
+        String cpf = "    ";
+
+        // Afirmamos uma exceção pois o CPF tem apenas espaços em branco
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientService.deleteByCpf(cpf);
+        });
+
+        // Verificamos que a mensagem de erro é igual a esperada
+        assertEquals("O CPF do cliente é obrigatório.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).deleteClientByCpf(any());
+    }
+
+    // Método findFilteredClients
+    @Test
+    @DisplayName("Should return the successfully filtered client.")
+    void shouldReturnTheSuccessfullyFilteredClient() {
+        // Arrange (informamos todos os filtros corretamente)
+        String name = "Beatriz"; // nome válido
+        String email = "beatriz@gmail.com"; // email válido
+        String cpf = "16465154048"; // cpf válido e normalizado
+        LocalDate birthStart = LocalDate.of(2000, 3, 1); // Data de inicio válida e anterior a data final
+        LocalDate birthEnd = LocalDate.of(2010, 1, 1); // Data final válida e após a data inicio
+        Integer page = 0; // página válida
+        Integer linesPerPage= 10; // linhas por página
+        String direction = "asc"; // direção válida
+        String orderBy = "name"; // ORDER BY válido
+
+        // Criamos um DTO do cliente que queremos retornar
+        ClientDto expectedClient = new ClientDto();
+        expectedClient.setName(name);
+        expectedClient.setEmail(email);
+        expectedClient.setCpf(cpf);
+        expectedClient.setBirth(LocalDate.of(2005, 7, 3));
+
+        // Criamos um GlobalPageDto que esperamos que o método retorne
+        GlobalPageDto<ClientDto> expectedPageDto = new GlobalPageDto<>();
+
+        // criamos uma lista de clientDto para adicionar expectedPageDto
+        List<ClientDto> expectedItems = new ArrayList<>();
+        expectedItems.add(expectedClient);
+        Number total = expectedItems.size();
+
+        // Salvamos tudo no nosso expectedPageDto
+        expectedPageDto.setItems(expectedItems);
+        expectedPageDto.setTotal(total.longValue());
+
+        // Simulamos que o nosso método retornou a page esperada
+        when(clientRepository.findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                page, linesPerPage, direction, orderBy)).thenReturn(expectedPageDto);
+
+        // Executamos o método que queremos testar
+        GlobalPageDto<ClientDto> returnedPageDto = clientService.findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos se a page esperada é igual a retornada
+        assertEquals(expectedPageDto.getTotal(), returnedPageDto.getTotal());
+        assertEquals(expectedPageDto.getItems().size(), returnedPageDto.getItems().size());
+        assertEquals(expectedPageDto.getItems().get(0).getName(), returnedPageDto.getItems().get(0).getName());
+        assertEquals(expectedPageDto.getItems().get(0).getEmail(), returnedPageDto.getItems().get(0).getEmail());
+        assertEquals(expectedPageDto.getItems().get(0).getCpf(), returnedPageDto.getItems().get(0).getCpf());
+        assertEquals(expectedPageDto.getItems().get(0).getBirth(), returnedPageDto.getItems().get(0).getBirth());
+
+        // Verificamos que o repository foi usado pois todos os filtros foram preenchidos corretamente
+        verify(clientRepository).findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                page, linesPerPage, direction, orderBy);
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when cpf is invalid to find filtered clients.")
+    void shouldThrowExceptionWhenCpfContainsLessThan11CharactersToFindFilteredClients() {
+        // Arrange (informamos um CPF inválido)
+        String name = "Beatriz"; // nome válido
+        String email = "beatriz@gmail.com"; // email válido
+        String cpf = "33333333333"; // cpf inválido
+        LocalDate birthStart = LocalDate.of(2000, 3, 1); // Data de inicio válida e anterior a data final
+        LocalDate birthEnd = LocalDate.of(2010, 1, 1); // Data final válida e após a data inicio
+        Integer page = 0; // página válida
+        Integer linesPerPage= 10; // linhas por página
+        String direction = "asc"; // direção válida
+        String orderBy = "name"; // ORDER BY válido
+
+        // Afirmamos exceção pois o filtro CPF inválido
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+           clientService.findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                   page, linesPerPage, direction, orderBy);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O CPF do cliente é inválido.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).findFilteredClients(any(),any(), any(), any(),
+                any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when birth start date filter is in the future to find filtered clients.")
+    void shouldThrowExceptionWhenBirthStartFilterIsInTheFutureToFindFilteredClients() {
+        // Arrange (informamos um filtro data de nascimento de início que está futuro)
+        String name = "Beatriz"; // nome válido
+        String email = "beatriz@gmail.com"; // email válido
+        String cpf = "16465154048"; // cpf válido e normalizado
+        LocalDate birthStart = LocalDate.of(3000, 3, 1); // Data de nascimento início no futuro
+        LocalDate birthEnd = LocalDate.of(2010, 1, 1); // Data de nascimento final válida
+        Integer page = 0; // página válida
+        Integer linesPerPage= 10; // linhas por página
+        String direction = "asc"; // direção válida
+        String orderBy = "name"; // ORDER BY válido
+
+        // Afirmamos exceção pois o filtro de inicio de data de nascimento está no futuro
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientService.findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                    page, linesPerPage, direction, orderBy);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("A data de nascimento de início não pode ser futura.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).findFilteredClients(any(),any(), any(), any(),
+                any(), any(), any(), any(), any());
+
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when birth end date filter is in the future to find filtered clients.")
+    void shouldThrowExceptionWhenBirthEndFilterIsInTheFutureToFindFilteredClients() {
+        // Arrange (informamos um filtro de data de nascimento final que está futuro)
+        String name = "Beatriz"; // nome válido
+        String email = "beatriz@gmail.com"; // email válido
+        String cpf = "16465154048"; // cpf válido e normalizado
+        LocalDate birthStart = LocalDate.of(2010, 3, 1); // Data de nascimento início válida
+        LocalDate birthEnd = LocalDate.of(3000, 1, 1); // Data de nascimento final no futuro
+        Integer page = 0; // página válida
+        Integer linesPerPage= 10; // linhas por página
+        String direction = "asc"; // direção válida
+        String orderBy = "name"; // ORDER BY válido
+
+        // Afirmamos exceção pois o filtro de inicio de data de nascimento está no futuro
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientService.findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                    page, linesPerPage, direction, orderBy);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("A data de nascimento final não pode ser futura.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).findFilteredClients(any(),any(), any(), any(),
+                any(), any(), any(), any(), any());
+
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when the birth start date filter is later than the birth end date to find filtered clients.")
+    void shouldThrowExceptionWhenBirthStartFilterIsLaterThanTheBirthEndToFindFilteredClients() {
+        // Arrange (informamos um filtro de data de nascimento final que está futuro)
+        String name = "Beatriz"; // nome válido
+        String email = "beatriz@gmail.com"; // email válido
+        String cpf = "16465154048"; // cpf válido e normalizado
+        LocalDate birthStart = LocalDate.of(2025, 3, 1); // Data de nascimento início posterior a data final
+        LocalDate birthEnd = LocalDate.of(2009, 1, 1); // Data de nascimento final
+        Integer page = 0; // página válida
+        Integer linesPerPage= 10; // linhas por página
+        String direction = "asc"; // direção válida
+        String orderBy = "name"; // ORDER BY válido
+
+        // Afirmamos exceção pois o filtro de data de nascimento início é posterior a data final
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientService.findFilteredClients(name, email, cpf, birthStart, birthEnd,
+                    page, linesPerPage, direction, orderBy);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("A data de nascimento de início não pode ser maior que a data final.", exception.getMessage());
+
+        // Verificamos que o método do repository não foi usado (porque falhou antes)
+        verify(clientRepository, never()).findFilteredClients(any(),any(), any(), any(),
+                any(), any(), any(), any(), any());
+
+    }
+
+    @Test
+    @DisplayName("Should apply default direction ASC when an invalid direction is provided.")
+    void shouldApplyDefaultDirectionAscWhenAnInvalidDirectionIsProvided() {
+        // Arrange (informamos um direction inválido)
+        Integer page = 0; // página válida
+        Integer linesPerPage = 10; // linhas por página
+        String direction = "lateral"; // direction inválido
+        String orderBy = "name"; // ORDER BY válido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq("asc"), eq(orderBy)))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para "asc" foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq("asc"), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default direction ASC when null direction is provided.")
+    void shouldApplyDefaultDirectionAscWhenNullDirectionIsProvided() {
+        // Arrange (informamos um direction null)
+        Integer page = 0; // página válida
+        Integer linesPerPage = 10; // linhas por página
+        String direction = null; // direction null
+        String orderBy = "name"; // ORDER BY válido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq("asc"), eq(orderBy)))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para "asc" foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq("asc"), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default order by name when an invalid order by is provided.")
+    void shouldApplyDefaultOrderByNameWhenAnInvalidOrderByIsProvided() {
+        // Arrange (informamos um order by inválido)
+        Integer page = 0; // página válida
+        Integer linesPerPage = 10; // linhas por página
+        String direction = "asc"; // direction válido
+        String orderBy = "mother_name"; // ORDER BY inválido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name")))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para "name" foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name"));
+    }
+
+    @Test
+    @DisplayName("Should apply default order by name when null order by is provided.")
+    void shouldApplyDefaultOrderByNameWhenNullOrderByIsProvided() {
+        // Arrange (informamos um order by nulo)
+        Integer page = 0; // página válida
+        Integer linesPerPage = 10; // linhas por página
+        String direction = "asc"; // direction válido
+        String orderBy = null; // ORDER BY nulo
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name")))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para "name" foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name"));
+    }
+
+
+    @Test
+    @DisplayName("Should apply default page when a negative number page is provided.")
+    void shouldApplyDefaultPageWhenANegativeNumberPageIsProvided() {
+        // Arrange (informamos uma pagina com número negativo)
+        Integer page = -1; // página com número negativo
+        Integer linesPerPage = 10; // linhas por página
+        String direction = "asc"; // direction válido
+        String orderBy = "name"; // ORDER BY válido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy)))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para 0 foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default page when null page is provided.")
+    void shouldApplyDefaultPageWhenNullPageIsProvided() {
+        // Arrange (informamos uma pagina nula)
+        Integer page = null; // página nula
+        Integer linesPerPage = 10; // linhas por página
+        String direction = "asc"; // direction válido
+        String orderBy = "name"; // ORDER BY válido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy)))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para 0 foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default lines per page when null lines per page are provided.")
+    void shouldApplyDefaultLinesPerPageWhenNullLinesPerPageAreProvided() {
+        // Arrange (informamos linhas por pagina null)
+        Integer page = 0; // página válida
+        Integer linesPerPage = null; // linhas por página null
+        String direction = "asc"; // direction válido
+        String orderBy = "name"; // ORDER BY válido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy)))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para 10 foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default lines per page when a negative number of lines per page is provided.")
+    void shouldApplyDefaultLinesPerPageWhenANegativeNumberOfLinesPerPageIsProvided() {
+        // Arrange (informamos linhas por pagina com número negativo)
+        Integer page = 0; // página válida
+        Integer linesPerPage = -5; // linhas por página com número negativo
+        String direction = "asc"; // direction válido
+        String orderBy = "name"; // ORDER BY válido
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy)))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Assert: garante que o fallback para 10 foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply the default return null when the filter name contains blank spaces.")
+    void shouldApplyTheDefaultReturnNullWhenTheFilterNameContainsBlankSpaces() {
+        // Arrange (informamos um nome com espaços em branco)
+        String name = "    "; // nome com espaços em branco
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(eq(null), any(), any(), any(), any(),
+                any(), any(), any(), any()))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(name, null, null, null, null,
+                null, null, null, null);
+
+        // Assert: garante que o fallback para null foi aplicado
+        verify(clientRepository).findFilteredClients(eq(null), any(), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should apply the default return null when the filter email contains blank spaces.")
+    void shouldApplyTheDefaultReturnNullWhenTheFilterEmailContainsBlankSpaces() {
+        // Arrange (informamos um email com espaços em branco)
+        String email = "    "; // email com espaços em branco
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), eq(null), any(), any(), any(),
+                any(), any(), any(), any()))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, email, null, null, null,
+                null, null, null, null);
+
+        // Assert: garante que o fallback para null foi aplicado
+        verify(clientRepository).findFilteredClients(any(), eq(null), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should apply the default return null when the filter cpf contains blank spaces.")
+    void shouldApplyTheDefaultReturnNullWhenTheFilterCpfContainsBlankSpaces() {
+        // Arrange (informamos um cpf com espaços em branco)
+        String cpf = "    "; // cpf com espaços em branco
+
+        // Simuala retorno do repository com direction padrão aplicado
+        when(clientRepository.findFilteredClients(any(), any(), eq(null), any(), any(),
+                any(), any(), any(), any()))
+                .thenReturn(new GlobalPageDto<>());
+
+        // Act
+        clientService.findFilteredClients(null, null, cpf, null, null,
+                null, null, null, null);
+
+        // Assert: garante que o fallback para null foi aplicado
+        verify(clientRepository).findFilteredClients(any(), any(), eq(null), any(), any(),
+                any(), any(), any(), any());
+    }
+
+
 
 
 }
