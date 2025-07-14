@@ -59,8 +59,7 @@ Observação: As tabelas devem ser criadas manualmente no banco de dados.
 
 3. **Execute o projeto:**
 - Via IDE: rode `OrderFlowApplication.java`
-- Via terminal:
-```bash
+
 # Linux/macOS
 ./mvnw spring-boot:run
 
@@ -68,9 +67,7 @@ Observação: As tabelas devem ser criadas manualmente no banco de dados.
 mvnw.cmd spring-boot:run
 
 A aplicação estará disponível em:
-```
 http://localhost:8080
-```
 
 ---
 
