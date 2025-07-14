@@ -4,7 +4,6 @@ import com.rodrigopettenon.orderflow.dtos.ClientDto;
 import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.repositories.ClientRepository;
-import com.rodrigopettenon.orderflow.utils.LogUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,8 +30,6 @@ class ClientServiceTest {
     @Mock
     private ClientRepository clientRepository;
 
-    @Mock
-    private LogUtil logUtil;
 
     @BeforeEach
     void setUp() {
@@ -1383,7 +1380,20 @@ class ClientServiceTest {
                 any(), any(), any(), any());
     }
 
+    //findAllClients
+    @Test
+    @DisplayName("Should return all clients successfully.")
+    void shouldReturnAllClientsSuccessfully() {
+        // Arrange
+        Integer page = 0; // página válida
+        Integer linesPerPage = 10; // linhas por página válido
+        String direction = "asc"; // direction válido
+        String orderBy = "name"; // ORDER BY válido
 
+        clientService.findAllClients(page, linesPerPage, direction, orderBy);
+
+        verify(clientRepository).findAllClients(page, linesPerPage, direction, orderBy);
+    }
 
 
 }

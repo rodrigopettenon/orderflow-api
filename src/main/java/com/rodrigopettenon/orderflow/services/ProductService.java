@@ -254,7 +254,7 @@ public class ProductService {
             throw new ClientErrorException("A data de vencimento do produto é obrigatória.");
         }
         if (expiration.isBefore(LocalDate.now())) {
-            throw new ClientErrorException("A data de vencimento do produto não pode ser no passado.");
+            throw new ClientErrorException("A data de vencimento do produto não pode estar no passado.");
         }
     }
 
