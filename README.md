@@ -1,6 +1,8 @@
-# OrderFlow API – Sistema de Gestão de Clientes, Produtos, Pedidos e Itens de Pedido
+# OrderFlow API
 
-API RESTful desenvolvida em Java com Spring Boot para realizar cadastro, consulta, filtros dinâmicos, paginação e ordenação de clientes, produtos, pedidos e itens de pedido.
+Sistema completo de gestão de clientes, produtos, pedidos e itens de pedido, com filtros dinâmicos, paginação e ordenação.
+
+API RESTful desenvolvida em Java com Spring Boot, utilizando EntityManager e consultas nativas, que permite realizar cadastro, consulta, atualização e remoção de clientes, produtos, pedidos e itens de pedido. Oferece suporte a filtros dinâmicos, paginação, ordenação e tratamento centralizado de exceções.
 
 O projeto adota uma arquitetura em camadas, utilizando EntityManager com consultas nativas, boas práticas de desenvolvimento, tratamento centralizado de erros e logs personalizados.
 
@@ -21,35 +23,27 @@ O projeto adota uma arquitetura em camadas, utilizando EntityManager com consult
 
 ---
 
-## Tecnologias Utilizadas
-
-- Linguagem: Java 8
-- Framework: Spring Boot 3.x
-- Persistência: JPA com uso de EntityManager (consultas nativas SQL)
-- Banco de Dados: MySQL (compatível com SQL Server)
-- Build: Maven
-- Ferramentas: IntelliJ IDEA, Git, Postman, MySQL Workbench
+### Tecnologias Utilizadas
+- Java 8
+- Spring Boot 3.x
+- JPA (com consultas nativas via EntityManager)
+- MySQL (compatível com SQL Server)
+- Maven
+- IntelliJ IDEA, Git, Postman, MySQL Workbench
 
 ---
 
-## Como Executar o Projeto Localmente
+### Como Executar o Projeto Localmente
 
-### Pré-requisitos
+#### Pré-requisitos
+- Java 8+
+- Maven
+- MySQL
+- IDE (recomendado: IntelliJ IDEA)
 
-- Java JDK 8 instalado
-- Maven instalado (ou utilização do Maven Wrapper `./mvnw`)
-- MySQL instalado e em execução localmente
-- IDE de sua preferência (IntelliJ IDEA recomendado)
-
-### Configuração
-
-1. Criar um banco de dados no MySQL, por exemplo: `cadastro_db`.
-
-2. Configurar o arquivo de propriedades localizado em:
-
-```
-src/main/resources/application.properties
-```
+#### Configuração
+1. Crie o banco `cadastro_db` no MySQL.
+2. Configure o arquivo `application.properties`:
 
 Exemplo de configuração:
 
@@ -62,19 +56,16 @@ spring.jpa.hibernate.ddl-auto=none
 
 Observação: As tabelas devem ser criadas manualmente no banco de dados.
 
-### Execução
 
-- Executar pela IDE: Rodar a classe principal `OrderFlowApplication.java`.
-- Executar pelo terminal:
-
-Linux/macOS:
-```
+3. **Execute o projeto:**
+- Via IDE: rode `OrderFlowApplication.java`
+- Via terminal:
+```bash
+# Linux/macOS
 ./mvnw spring-boot:run
-```
-Windows:
-```
+
+# Windows
 mvnw.cmd spring-boot:run
-```
 
 A aplicação estará disponível em:
 ```
@@ -181,17 +172,15 @@ http://localhost:8080
 
 ---
 
-## Melhorias Futuras
-
-- Implementação de testes unitários e de integração (em andamento)
-- Documentação interativa utilizando Swagger/OpenAPI
-- Implementação de autenticação e controle de acesso
-- Geração de relatórios e exportação de dados
-- Consultas agregadas e estatísticas (ex.: total de pedidos por cliente)
+### Melhorias Futuras
+- Conclusão dos testes unitários e início dos testes de integração
+- Documentação interativa com Swagger/OpenAPI
+- Autenticação e controle de acesso (JWT ou OAuth2)
+- Relatórios e exportação de dados
+- Dashboards com estatísticas agregadas (ex.: pedidos por cliente, valor total vendido)
 
 ---
 
 ## Repositório
 
-Acesse o projeto no GitHub:
-[github.com/rodrigopettenon/orderflow-api](https://github.com/rodrigopettenon/orderflow-api)
+🔗 [Acesse o projeto no GitHub](https://github.com/rodrigopettenon/orderflow-api)
