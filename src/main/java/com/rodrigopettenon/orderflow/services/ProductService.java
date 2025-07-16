@@ -73,10 +73,7 @@ public class ProductService {
 
         String sanitizedName = sanitizeNameFilter(name);
         String sanitizedSku = validateSkuFilter(sku);
-        validateMinPriceFilter(minPrice, maxPrice);
-        validateMaxPriceFilter(maxPrice, minPrice);
-
-
+        validateMinPriceAndMaxPriceFilter(minPrice, maxPrice);
 
         return  productRepository.findFilteredProducts(sanitizedName, sanitizedSku, minPrice, maxPrice, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
@@ -137,27 +134,17 @@ public class ProductService {
         return sku;
     }
 
-    private void validateMinPriceFilter(Double minPrice, Double maxPrice) {
+    private void validateMinPriceAndMaxPriceFilter(Double minPrice, Double maxPrice) {
         logProductMinPriceFilterValidation(minPrice);
+        logProductMaxPriceFilterValidation(maxPrice);
         if (nonNull(minPrice) && minPrice <= 0) {
             throw new ClientErrorException("O preço minimo do produto não pode ser menor ou igual a 0.");
         }
-        if (nonNull(minPrice) && nonNull(maxPrice)) {
-            if (minPrice > maxPrice) {
-                throw new ClientErrorException("O preço minimo não pode ser maior que o preço maximo.");
-            }
-        }
-    }
-
-    private void validateMaxPriceFilter(Double maxPrice, Double minPrice) {
-        logProductMaxPriceFilterValidation(maxPrice);
         if (nonNull(maxPrice) && maxPrice <= 0) {
             throw new ClientErrorException("O preço máximo do produto não pode ser menor ou igual a 0.");
         }
-        if (nonNull(maxPrice) && nonNull(minPrice)) {
-            if (minPrice > maxPrice) {
-                throw new ClientErrorException("O preço maximo não pode ser menor que o preço minimo.");
-            }
+        if (nonNull(minPrice) && nonNull(maxPrice) && minPrice > maxPrice) {
+            throw new ClientErrorException("O preço minimo não pode ser maior que o preço maximo.");
         }
     }
 

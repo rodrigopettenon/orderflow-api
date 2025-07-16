@@ -1,5 +1,6 @@
 package com.rodrigopettenon.orderflow.services;
 
+import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.dtos.ProductDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.repositories.ProductRepository;
@@ -13,6 +14,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -777,6 +780,544 @@ class ProductServiceTest {
 
         // Verificamos se o método do repository não foi usado (porque falhou antes)
         verify(productRepository, never()).updateProductBySku(any(), any());
+    }
+
+    //Método deleteBySku
+    @Test
+    @DisplayName("Should successfully delete the product by sku.")
+    void shouldSuccessfullyDeleteTheProductBySku() {
+        // Arrange (informamos um SKU válido e que "supostamente existe no banco)
+        String sku = "N5O8TREG";
+
+        // Simulamos que o SKU existe no nosso banco de dados
+        when(productRepository.existsProductBySku(sku)).thenReturn(true);
+
+        // Executamos o método que queremos testar
+        productService.deleteBySku(sku);
+
+        // Verificamos se o método do repository foi usado como o esperado (porque o SKU existe)
+        verify(productRepository).deleteProductBySku(sku);
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when sku is null to delete a product.")
+    void shouldThrowExceptionWhenSkuIsNullToDeleteAProduct() {
+        // Arrange (informamos um SKU null)
+        String sku = null;
+
+        // Afirmamos uma exceção pois o sku é null
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () ->{
+           productService.deleteBySku(sku);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU do produto é obrigatório.", exception.getMessage());
+
+        // Verificamos se o repository realmente não foi usado (porque falhou antes)
+        verify(productRepository, never()).deleteProductBySku(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when sku contains blank spaces to delete a product.")
+    void shouldThrowExceptionWhenSkuContainsBlankSpacesToDeleteAProduct() {
+        // Arrange (informamos um SKU com espaços em branco)
+        String sku = "            ";
+
+        // Afirmamos uma exceção pois o sku contém espaços em branco
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () ->{
+            productService.deleteBySku(sku);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU do produto é obrigatório.", exception.getMessage());
+
+        // Verificamos se o repository realmente não foi usado (porque falhou antes)
+        verify(productRepository, never()).deleteProductBySku(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when sku does not contain 8 characters to delete a product.")
+    void shouldThrowExceptionWhenSkuDoesNotContain8CharactersToDeleteAProduct() {
+        // Arrange (informamos um SKU que não contenha exatamente 8 caracteres)
+        String sku = "HJ5FAS0DFH1324JH";
+
+        // Afirmamos uma exceção pois o sku não contém exatos 8 caracteres
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () ->{
+            productService.deleteBySku(sku);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU do produto deve ter 8 caracteres.", exception.getMessage());
+
+        // Verificamos se o repository realmente não foi usado (porque falhou antes)
+        verify(productRepository, never()).deleteProductBySku(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when sku is not alphanumeric to delete a product.")
+    void shouldThrowExceptionWhenSkuIsNotAlphanumericToDeleteAProduct() {
+        // Arrange (informamos um SKU que não é alfanumérico)
+        String sku = "$#!@#$¨%";
+
+        // Afirmamos uma exceção pois o sku que não é alfanumérico
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () ->{
+            productService.deleteBySku(sku);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU do produto deve ser alfanumerico.", exception.getMessage());
+
+        // Verificamos se o repository realmente não foi usado (porque falhou antes)
+        verify(productRepository, never()).deleteProductBySku(any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when sku is not registered to delete a product.")
+    void shouldThrowExceptionWhenSkuIsNotRegisteredToDeleteAProduct() {
+        // Arrange (informamos um SKU que "supostamente" não está cadastrado)
+        String sku = "TEST2026"; // sku válido
+
+        // Simulamos que o SKU não está cadastrado no banco
+        when(productRepository.existsProductBySku(sku)).thenReturn(false);
+
+        // Afirmamos uma exceção pois o sku "supostamente" não está cadastrado
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () ->{
+            productService.deleteBySku(sku);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU informado não está cadastrado.", exception.getMessage());
+
+        // Verificamos se o repository realmente não foi usado (porque falhou antes)
+        verify(productRepository, never()).deleteProductBySku(any());
+    }
+
+
+    // Método findFilteredProducts
+    @Test
+    @DisplayName("Should successfully return the filtered products.")
+    void shouldSuccessfullyReturnTheFilteredProducts() {
+        // Arrange (informamos todos os filtros válidos)
+        String name = "Calabresa"; // nome válido
+        String sku = "TEST2026"; // sku válido
+        Double minPrice = 10.00; // preço minimo válido
+        Double maxPrice = 60.00; // preço máximo válido
+        Integer page = 0; // page válida
+        Integer linesPerPage = 10; // linhas por página válido
+        String direction = "desc"; // direction válida
+        String orderBy = "name"; // orderBy válido
+
+        // Criamos um DTO que salvaremos a lista que será salva no GlobalPageDto
+        ProductDto expectedProduct = new ProductDto();
+        expectedProduct.setName("Calabresa Frimesa");
+        expectedProduct.setSku(sku);
+        expectedProduct.setPrice(43.90);
+        expectedProduct.setExpiration(LocalDate.of(2030, 7, 6));
+
+        // Criamos a lista que "supostamente" armazenará os filtrados pelo banco e que será salva ao GlobalPageDto
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productDtoList.add(expectedProduct); // salvamos o produto na lista
+
+        // Obtemos o total de produtos que foram encontrados na lista
+        Number total = productDtoList.size();
+
+
+        // Criamos um GlobalPageDto para armazenar os dados que "supostamente" foram retornados pelo banco
+        GlobalPageDto<ProductDto> expectedProductPageDto = new GlobalPageDto<>();
+        expectedProductPageDto.setItems(productDtoList); // Salvamos a lista no Global dto
+        expectedProductPageDto.setTotal(total.longValue()); // Salvamos o total de produtos que foram encontrados e convertemos para longValue
+
+        // Simulamos que ao buscar pelos filtros informados encontramos o DTO esperado
+        when(productRepository.findFilteredProducts(name, sku, minPrice, maxPrice,
+                page, linesPerPage, direction, orderBy)).thenReturn(expectedProductPageDto);
+
+        // Executamos o método que queremos testar
+        GlobalPageDto<ProductDto> returnedProductPageDto = productService.findFilteredProducts(name, sku, minPrice, maxPrice,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos se todos os dados retornados estão de acordo com os dados esperados
+        assertEquals(returnedProductPageDto.getItems().get(0).getName(), expectedProductPageDto.getItems().get(0).getName());
+        assertEquals(returnedProductPageDto.getItems().get(0).getPrice(), expectedProductPageDto.getItems().get(0).getPrice());
+        assertEquals(returnedProductPageDto.getItems().get(0).getSku(), expectedProductPageDto.getItems().get(0).getSku());
+        assertEquals(returnedProductPageDto.getItems().get(0).getExpiration(), expectedProductPageDto.getItems().get(0).getExpiration());
+        assertEquals(returnedProductPageDto.getTotal(), expectedProductPageDto.getTotal());
+
+        // Verificamos que o método do repository foi usado (porque tudo foi informado corretamente)
+        verify(productRepository).findFilteredProducts(name, sku, minPrice, maxPrice,
+                page, linesPerPage, direction, orderBy);
+    }
+
+    @Test
+    @DisplayName("Should apply default direction when given direction is not in allowed list to find filtered products.")
+    void shouldApplyDefaultDirectionWhenGivenDirectionIsNotInAllowedListToFindFilteredProducts() {
+        // Informamos uma direction inválida
+        Integer page = 0; // page válida
+        Integer linesPerPage = 10; // linhas por página válido
+        String direction = "alternada"; // direction inválida
+        String orderBy = "name"; // orderBy válido
+
+        // Simulamos que no repository a direction muda para "asc"
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(), eq(page),
+                eq(linesPerPage), eq("asc"), eq(orderBy))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com a direction inválida
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository a direction que foi usada foi "asc" mesmo tendo informado uma direction inválida
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(), eq(page),
+                eq(linesPerPage), eq("asc"), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default direction when given direction is null to find filtered products.")
+    void shouldApplyDefaultDirectionWhenGivenDirectionIsNullToFindFilteredProducts() {
+        // Informamos uma direction null
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = null;
+        String orderBy = "name";
+
+        // Simulamos que no repository a direction muda para "asc" mesmo tendo sido enviada como null
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq("asc"), eq(orderBy))).thenReturn(new GlobalPageDto<>());
+
+        //Executamos o método que queremos testar com a direction null
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository a direction usada foi "asc" mesmo tendo sido informada uma null no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq("asc"), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default orderBy when given orderBy is not in allowed list to find filtered products.")
+    void shouldApplyDefaultOrderByWhenGivenOrderByIsNotInAllowedListToFindFilteredProducts() {
+        // informamos um orderBy que não está na lista ALLOWED
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = "desc";
+        String orderBy = "tamanho";
+
+        // Simulamos que o método do repository recebe o orderBy "name" mesmo tendo sido enviado como "tamanho" no service
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name"))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com orderBy inválido
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository a orderBy usada foi "name" mesmo tendo sido informada como "tamanho" no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name"));
+    }
+
+    @Test
+    @DisplayName("Should apply default orderBy when given orderBy is null to find filtered products.")
+    void shouldApplyDefaultOrderByWhenGivenOrderByIsNullToFindFilteredProducts() {
+        // informamos um orderBy null
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = "desc";
+        String orderBy = null;
+
+        // Simulamos que o método do repository recebe o orderBy "name" mesmo tendo sido enviado como null
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name"))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com orderBy null
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository a orderBy usada foi "name" mesmo tendo sido informada como null no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(linesPerPage), eq(direction), eq("name"));
+    }
+
+    @Test
+    @DisplayName("Should apply default number page when given negative number page to find filtered products.")
+    void shouldApplyDefaultNumberPageWhenGivenNegativeNumberPageToFindFilteredProducts() {
+        // Informamos um número negativo em page
+        Integer page = -1;
+        Integer linesPerPage = 10;
+        String direction = "desc";
+        String orderBy = "name";
+
+        // Simulamos que o método do repository recebe o page "0" mesmo tendo sido informado como "-1"
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com page negativa
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository a page usada foi "0" mesmo tendo sido informada como "-1" no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default number page when page is null to find filtered products.")
+    void shouldApplyDefaultNumberPageWhenPageIsNullToFindFilteredProducts() {
+        // Informamos page como null
+        Integer page = null;
+        Integer linesPerPage = 10;
+        String direction = "desc";
+        String orderBy = "name";
+
+        // Simulamos que o método do repository recebe o page "0" mesmo tendo sido informado como null
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com page null
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository a page usada foi "0" mesmo tendo sido informada como null no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(0), eq(linesPerPage), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default number of linesPerPage when given negative number of linesPerPage to find filtered products.")
+    void shouldApplyDefaultNumberOfLinesPerPageWhenGivenNegativeNumberOfLinesPerPageToFindFilteredProducts() {
+        // Informamos um número negativo em linesPerPage
+        Integer page = 0;
+        Integer linesPerPage = -1;
+        String direction = "desc";
+        String orderBy = "name";
+
+        // Simulamos que o método do repository recebe o linesPerPage "10" mesmo tendo sido informado como "-1"
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com linesPerPage negativo
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository o linesPerPage usado foi "0" mesmo tendo sido informado como "-1" no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default number of linesPerPage when linesPerPage is null to find filtered products.")
+    void shouldApplyDefaultNumberOfLinesPerPageWhenLinesPerPageIsNullToFindFilteredProducts() {
+        // Informamos linesPerPage como null
+        Integer page = 0;
+        Integer linesPerPage = null;
+        String direction = "desc";
+        String orderBy = "name";
+
+        // Simulamos que o método do repository recebe o linesPerPage "10" mesmo tendo sido informado como null
+        when(productRepository.findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy))).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com linesPerPage null
+        productService.findFilteredProducts(null, null, null, null,
+                page, linesPerPage, direction, orderBy);
+
+        // Verificamos que no método do repository o linesPerPage usado foi "0" mesmo tendo sido informado como null no service
+        // Isso porque o service converteu para a direction default
+        verify(productRepository).findFilteredProducts(any(), any(), any(), any(),
+                eq(page), eq(10), eq(direction), eq(orderBy));
+    }
+
+    @Test
+    @DisplayName("Should apply default null value when name contains blank spaces to find filtered products.")
+    void shouldApplyDefaultNullValueWhenNameContainsBlankSpacesToFindFilteredProducts() {
+        // Informamos um nome com espaços em branco
+        String name = "     ";
+
+        // Simulamos que no repository mesmo tendo sido enviado um nome com espaços em branco ele converte para null
+        when(productRepository.findFilteredProducts(eq(null), any(), any(), any(),
+                any(), any(), any(), any())).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com o nome que contém apenas espaços em branco
+        productService.findFilteredProducts(name, null, null, null,
+                null, null, null, null);
+
+        // Verificamos que no método do repository o nome usado foi null mesmo que tendo sido preenchido com espaços em branco no service
+        // Isso porque o service converteu para null.
+        verify(productRepository).findFilteredProducts(eq(null), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should apply default null value when SKU contains blank spaces to find filtered products.")
+    void shouldApplyDefaultNullValueWhenSkuContainsBlankSpacesToFindFilteredProducts() {
+        // Informamos um sku com espaços em branco
+        String sku = "     ";
+
+        // Simulamos que no repository mesmo tendo sido enviado um sku com espaços em branco ele converte para null
+        when(productRepository.findFilteredProducts(any(), eq(null), any(), any(),
+                any(), any(), any(), any())).thenReturn(new GlobalPageDto<>());
+
+        // Executamos o método que queremos testar com o sku que contém apenas espaços em branco
+        productService.findFilteredProducts(null, sku, null, null,
+                null, null, null, null);
+
+        // Verificamos que no método do repository o sku usado foi null mesmo que tendo sido preenchido com espaços em branco no service
+        // Isso porque o service converteu para null.
+        verify(productRepository).findFilteredProducts(any(), eq(null), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when SKU does not contain 8 characters to find filtered products.")
+    void shouldThrowExceptionWhenSkuDoesNotContain8CharactersToFindFilteredProducts() {
+        // Informamos um SKU que não contém exatamente 8 caracteres
+        String sku = "1DJK4HI";
+
+        // Afirmamos uma exceção pois o SKU não contém 8 caracteres
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+           productService.findFilteredProducts(null, sku, null, null,
+                   null, null, null, null);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU do produto deve ter 8 caractéres.", exception.getMessage());
+
+        // Verificamos se o método do repository não foi usado (porque falhou antes)
+        verify(productRepository, never()).findFilteredProducts(any(), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when SKU is not alphanumeric to find filtered products.")
+    void shouldThrowExceptionWhenSkuIsNotAlphanumericToFindFilteredProducts() {
+        // Informamos um SKU que não é alfanumérico
+        String sku = "?$!@%¨¨$";
+
+        // Afirmamos uma exceção pois o SKU não é alfanumérico
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            productService.findFilteredProducts(null, sku, null, null,
+                    null, null, null, null);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O SKU do produto deve ser alfanumérico.", exception.getMessage());
+
+        // Verificamos se o método do repository não foi usado (porque falhou antes)
+        verify(productRepository, never()).findFilteredProducts(any(), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when the minimum price is less than or equal 0 to find filtered products.")
+    void shouldThrowExceptionWhenTheMinimumPriceIsLessThanOrEqual0ToFindFilteredProducts() {
+        // Informamos um preço minimo menor ou igual a zero
+        Double minPrice = 0.0;
+
+        // Afirmamos uma exceção pois o preço minimo é menor ou igual a zero
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            productService.findFilteredProducts(null, null, minPrice, null,
+                    null, null, null, null);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O preço minimo do produto não pode ser menor ou igual a 0.", exception.getMessage());
+
+        // Verificamos se o método do repository não foi usado (porque falhou antes)
+        verify(productRepository, never()).findFilteredProducts(any(), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when the maximum price is less than or equal 0 to find filtered products.")
+    void shouldThrowExceptionWhenTheMaximumPriceIsLessThanOrEqual0ToFindFilteredProducts() {
+        // Informamos um preço máximo menor ou igual a zero
+        Double maxPrice = -7.0;
+
+        // Afirmamos uma exceção pois o preço máximo é menor ou igual a zero
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            productService.findFilteredProducts(null, null, null, maxPrice,
+                    null, null, null, null);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O preço máximo do produto não pode ser menor ou igual a 0.", exception.getMessage());
+
+        // Verificamos se o método do repository não foi usado (porque falhou antes)
+        verify(productRepository, never()).findFilteredProducts(any(), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when the minimum price is greater than maximum price to find filtered products.")
+    void shouldThrowExceptionWhenTheMinimumPriceIsGreaterThanMaximumPriceToFindFilteredProducts() {
+        // Informamos um preço minimo maior que o preço máximo
+        Double minPrice = 20.0;
+        Double maxPrice = 9.0;
+
+        // Afirmamos uma exceção pois o preço minimo é maior que o preço maximo
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            productService.findFilteredProducts(null, null, minPrice, maxPrice,
+                    null, null, null, null);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("O preço minimo não pode ser maior que o preço maximo.", exception.getMessage());
+
+        // Verificamos se o método do repository não foi usado (porque falhou antes)
+        verify(productRepository, never()).findFilteredProducts(any(), any(), any(), any(),
+                any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should successfully return all products with pagination and sorting.")
+    void shouldSuccessfullyReturnAllProductsWithPaginationAndSorting() {
+        // Arrange – definimos os parâmetros de paginação e ordenação válidos
+        Integer page = 0;
+        Integer linesPerPage = 5;
+        String direction = "desc";
+        String orderBy = "price";
+
+        // Criamos um DTO que simula um produto retornado do banco
+        ProductDto expectedProduct = new ProductDto();
+        expectedProduct.setName("Queijo Mussarela");
+        expectedProduct.setSku("QJMO7890");
+        expectedProduct.setPrice(49.90);
+        expectedProduct.setExpiration(LocalDate.of(2032, 8, 10));
+
+        // Criamos a lista de produtos retornada do banco
+        List<ProductDto> productList = new ArrayList<>();
+        productList.add(expectedProduct);
+
+        // Definimos o total simulado
+        Number total = productList.size();
+
+        // Criamos o DTO de resposta com lista e total
+        GlobalPageDto<ProductDto> expectedPageDto = new GlobalPageDto<>();
+        expectedPageDto.setItems(productList);
+        expectedPageDto.setTotal(total.longValue());
+
+        // Simulamos o retorno do repository
+        when(productRepository.findAllProducts(page, linesPerPage, direction, orderBy))
+                .thenReturn(productList);
+        when(productRepository.countAllProducts())
+                .thenReturn(total.longValue());
+
+        // Act – executamos o método que queremos testar
+        GlobalPageDto<ProductDto> returnedPageDto = productService.findAllProducts(page, linesPerPage, direction, orderBy);
+
+        // Assert – verificamos se os dados retornados batem com os esperados
+        assertEquals(productList.get(0).getName(), returnedPageDto.getItems().get(0).getName());
+        assertEquals(productList.get(0).getSku(), returnedPageDto.getItems().get(0).getSku());
+        assertEquals(productList.get(0).getPrice(), returnedPageDto.getItems().get(0).getPrice());
+        assertEquals(productList.get(0).getExpiration(), returnedPageDto.getItems().get(0).getExpiration());
+        assertEquals(total.longValue(), returnedPageDto.getTotal());
+
+        // Verificamos que o método do repository foi chamado corretamente
+        verify(productRepository).findAllProducts(page, linesPerPage, direction, orderBy);
     }
 
 }
