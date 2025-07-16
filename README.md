@@ -24,7 +24,7 @@ O projeto adota uma arquitetura em camadas, utilizando EntityManager com consult
 ---
 
 ### Tecnologias Utilizadas
-- Java 8
+- Java 17
 - Spring Boot 3.x
 - JPA (com consultas nativas via EntityManager)
 - MySQL (compatível com SQL Server)
@@ -36,7 +36,7 @@ O projeto adota uma arquitetura em camadas, utilizando EntityManager com consult
 ### Como Executar o Projeto Localmente
 
 #### Pré-requisitos
-- Java 8+
+- Java 17
 - Maven
 - MySQL
 - IDE (recomendado: IntelliJ IDEA)
