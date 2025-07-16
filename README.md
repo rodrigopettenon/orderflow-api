@@ -14,9 +14,7 @@ O projeto adota uma arquitetura em camadas, utilizando EntityManager com consult
 - CRUD completo de Clientes
 - Cadastro e consulta de Pedidos
 - Cadastro e consulta de Itens de Pedido
-- Consultas com filtros dinâmicos
-- Paginação e ordenação
-- Consultas com INNER JOIN trazendo detalhes completos dos itens, pedidos, produtos e clientes
+- Consultas com filtros dinâmicos, paginação, ordenação e JOINs para retornar dados completos dos relacionamentos
 - Validações manuais com retorno de erros personalizados
 - Tratamento centralizado de exceções
 - Logs personalizados
