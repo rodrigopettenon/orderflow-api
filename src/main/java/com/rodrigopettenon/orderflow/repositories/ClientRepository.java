@@ -8,7 +8,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
-
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;

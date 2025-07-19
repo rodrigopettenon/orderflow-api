@@ -14,10 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.rodrigopettenon.orderflow.utils.LogUtil.*;
 import static com.rodrigopettenon.orderflow.utils.StringsValidation.removeAllSpaces;
@@ -31,18 +28,26 @@ public class OrderService{
 
     private static final List<String> ALLOWED_ORDER_BY = Arrays.asList("id", "client_id", "order_date", "status");
     private static final List<String> ALLOWED_DIRECTION = Arrays.asList("asc", "desc");
-    private static final Map<String, String> ORDER_BY_COLUMN_MAP_FILTER = Map.of(
-            "order_date", "o.order_date",
-            "order_status", "o.status",
-            "client_id", "c.id",
-            "item_quantity", "i.quantity",
-            "item_price", "i.price",
-            "client_name", "c.name");
-    private static final Map<String, String> ORDER_BY_COLUMN_MAP_SALES_REPORT = Map.of(
-            "client_id", "c.id",
-            "client_name", "c.name",
-            "total_orders", "COUNT(o.id)",
-            "total_amount", "SUM(i.price * i.quantity)");
+    private static final Map<String, String> ORDER_BY_COLUMN_MAP_FILTER;
+    static {
+        Map<String, String> map = new HashMap<>();
+        map.put("order_date", "o.order_date");
+        map.put("order_status", "o.status");
+        map.put("client_id", "c.id");
+        map.put("item_quantity", "i.quantity");
+        map.put("item_price", "i.price");
+        map.put("client_name", "c.name");
+        ORDER_BY_COLUMN_MAP_FILTER = Collections.unmodifiableMap(map);
+    }
+    private static final Map<String, String> ORDER_BY_COLUMN_MAP_SALES_REPORT;
+    static {
+        Map<String, String> map = new HashMap<>();
+        map.put("client_id", "c.id");
+        map.put("client_name", "c.name");
+        map.put("total_orders", "COUNT(o.id)");
+        map.put("total_amount", "SUM(i.price * i.quantity)");
+        ORDER_BY_COLUMN_MAP_SALES_REPORT = Collections.unmodifiableMap(map);
+    }
 
     @Autowired
     private OrderRepository orderRepository;
