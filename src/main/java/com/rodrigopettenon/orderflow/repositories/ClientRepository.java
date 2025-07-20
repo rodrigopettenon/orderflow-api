@@ -128,7 +128,7 @@ public class ClientRepository {
 
     public ClientDto findClientById(Long id) {
         try{
-            String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1");
+            String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1 ");
 
             Query query = em.createNativeQuery(sql)
                     .setParameter("id", id);
@@ -149,7 +149,10 @@ public class ClientRepository {
             clientFound.setBirth(((Date) result[4]).toLocalDate());
 
             return clientFound;
-        } catch (Exception e) {
+        }
+        catch (ClientErrorException e) {
+            throw e; // Não capturar e engolir a exceção esperada
+        }catch (Exception e) {
             throw new ClientErrorException("Erro ao buscar cliente pelo id: " + id);
         }
     }
