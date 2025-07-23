@@ -2,8 +2,10 @@ package com.rodrigopettenon.orderflow.repositories;
 
 import com.rodrigopettenon.orderflow.dtos.ClientDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
+import com.rodrigopettenon.orderflow.models.ClientModel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.websocket.ClientEndpoint;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -323,6 +324,7 @@ class ClientRepositoryTest {
         verify(query, never()).getResultList();
     }
 
+    // Método findAllClients
     @Test
     @DisplayName("Should return a paginated list of ClientDto when clients exist.")
     void shouldReturnAPaginatedListOfClientDtoWhenClientsExist() {
@@ -412,6 +414,7 @@ class ClientRepositoryTest {
         verify(query).getResultList();
     }
 
+    // Método findClientById
     @Test
     @DisplayName("Should successfully find the client by ID.")
     void shouldSuccessfullyFindTheClientById() {
@@ -510,5 +513,273 @@ class ClientRepositoryTest {
         verify(query).setParameter("id", id);
         verify(query).getResultList();
     }
+
+    // Método findClientModelById
+    @Test
+    @DisplayName("Should successfully find client model by ID.")
+    void shouldSuccessfullyFindClientModelById() {
+        // Arrange - criamos um ID válido
+        Long id = 1L;
+
+        // Criamos uma lista com um cliente
+        List<Object[]> expectedResultList = new ArrayList<>();
+        expectedResultList.add(new Object[]{1, "Osvaldo Pires", "osvaldo@gmail.com", "18068803009",  java.sql.Date.valueOf(LocalDate.of(1990, 1, 1))});
+
+        Object[] expectedResult = expectedResultList.get(0);
+        ClientModel expectedClientModel = new ClientModel();
+        expectedClientModel.setId(((Number) expectedResult[0]).longValue());
+        expectedClientModel.setName((String) expectedResult[1]);
+        expectedClientModel.setEmail((String) expectedResult[2]);
+        expectedClientModel.setCpf((String) expectedResult[3]);
+        expectedClientModel.setBirth(((Date) expectedResult[4]).toLocalDate());
+
+        // Simulamos criar uma NativeQuery
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        // Simulamos setar o parametro id
+        when(query.setParameter("id", id)).thenReturn(query);
+        // Simulamos executar a query e retornar a lista que montamos manualmente
+        when(query.getResultList()).thenReturn(expectedResultList);
+
+        //Executamos o método que queremos testar
+        ClientModel returnedClient = clientRepository.findClientModelById(id);
+
+        // Verificamos se o cliente retornado é igual ao esperado
+        assertEquals(returnedClient.getId(), expectedClientModel.getId());
+        assertEquals(returnedClient.getName(), expectedClientModel.getName());
+        assertEquals(returnedClient.getEmail(), expectedClientModel.getEmail());
+        assertEquals(returnedClient.getCpf(), expectedClientModel.getCpf());
+        assertEquals(returnedClient.getBirth(), expectedClientModel.getBirth());
+
+        // Verificamos se os métodos foram chamados como o esperado
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when the client model is not found by ID.")
+    void shouldThrowExceptionWhenTheClientModelIsNotFoundById() {
+        // Arrange - Criamos um ID válido.
+        Long id = 1L;
+
+        // Criamos uma lista vazia para simular que o retorno da lista é empty
+        List<Object[]> expectedList = new ArrayList<>();
+
+        // Simulamos criar uma NativeQuery para buscar o banco de dados no banco
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+
+        when(query.setParameter("id", id)).thenReturn(query);
+
+        when(query.getResultList()).thenReturn(expectedList);
+
+        // Afirmamos uma exceção (porque a lista veio vazia)
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+           clientRepository.findClientModelById(id);
+        });
+
+        // Verificamos se a mensagem de erro veio igual a esperada
+        assertEquals("Cliente não encontrado pelo id: " + id, exception.getMessage());
+
+        // Verificamos se todas as etapas foram feitas antes da exceção
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when an error occurs while executing the query to find client model by ID.")
+    void shouldThrowExceptionWhenAnErrorOccursWhileExecutingTheQueryToFindClientModelById() {
+        // Arrange - Criamos um ID válido
+        Long id = 1L;
+
+        // Simulamos criar uma NativeQuery para buscar um clientModel pelo ID.
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("id", id)).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Simulated Exception"));
+
+        // Afirmamos uma exceção ao executar o método
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.findClientModelById(id);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Erro ao buscar cliente pelo ID" + id, exception.getMessage());
+
+        // Verificamos se tudo simulado foi executado antes de ocorrer o erro
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("id", id);
+        verify(query).getResultList();
+    }
+
+    // Método findClientByEmail
+    @Test
+    @DisplayName("Should successfully find the client by email.")
+    void shouldSuccessfullyFindTheClientByEmail() {
+        // Arrange - criamos um email válido
+        String email = "osvaldo@gmail.com";
+
+        // Criamos uma lista com um cliente
+        List<Object[]> expectedResultList = new ArrayList<>();
+        expectedResultList.add(new Object[]{1, "Osvaldo Pires", "osvaldo@gmail.com", "18068803009",  java.sql.Date.valueOf(LocalDate.of(1990, 1, 1))});
+
+        Object[] expectedResult = expectedResultList.get(0);
+        ClientDto expectedClientDto = new ClientDto();
+        expectedClientDto.setId(((Number) expectedResult[0]).longValue());
+        expectedClientDto.setName((String) expectedResult[1]);
+        expectedClientDto.setEmail((String) expectedResult[2]);
+        expectedClientDto.setCpf((String) expectedResult[3]);
+        expectedClientDto.setBirth(((Date) expectedResult[4]).toLocalDate());
+
+        // Simulamos criar uma NativeQuery
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        // Simulamos setar o parametro email
+        when(query.setParameter("email", email)).thenReturn(query);
+        // Simulamos executar a query e retornar a lista que montamos manualmente
+        when(query.getResultList()).thenReturn(expectedResultList);
+
+        //Executamos o método que queremos testar
+        ClientDto returnedClient = clientRepository.findClientByEmail(email);
+
+        // Verificamos se o cliente retornado é igual ao esperado
+        assertEquals(returnedClient.getId(), expectedClientDto.getId());
+        assertEquals(returnedClient.getName(), expectedClientDto.getName());
+        assertEquals(returnedClient.getEmail(), expectedClientDto.getEmail());
+        assertEquals(returnedClient.getCpf(), expectedClientDto.getCpf());
+        assertEquals(returnedClient.getBirth(), expectedClientDto.getBirth());
+
+        // Verificamos se os métodos foram chamados como o esperado
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("email", email);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when an error occurs while executing the query to find client by email.")
+    void shouldThrowExceptionWhenAnErrorOccursWhileExecutingTheQueryToFindClientByEmail() {
+        // Arrange - Criamos um email válido
+        String email = "pericleiton@gmail.com";
+
+        // Simulamos criar uma NativeQuery para buscar um clientModel pelo ID.
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("email", email)).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Simulated Exception"));
+
+        // Afirmamos uma exceção ao executar o método
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.findClientByEmail(email);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Erro ao buscar cliente pelo email.", exception.getMessage());
+
+        // Verificamos se tudo simulado foi executado antes de ocorrer o erro
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("email", email);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when is not found client by email.")
+    void shouldThrowExceptionWhenIsNotFoundClientByEmail() {
+        // Arrange - Criamos um email válido.
+        String email = "impostor@gmail.com";
+
+        // Criamos uma lista vazia para simular que o retorno da lista é empty
+        List<Object[]> expectedList = new ArrayList<>();
+
+        // Simulamos criar uma NativeQuery para buscar o banco de dados no banco
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+
+        when(query.setParameter("email", email)).thenReturn(query);
+
+        when(query.getResultList()).thenReturn(expectedList);
+
+        // Afirmamos um erro ao executar o método (porque a lista veio vazia)
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.findClientByEmail(email);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Cliente não encontrado pelo email: " + email, exception.getMessage());
+
+        // Verificamos se todas etapas foram executadas antes de ocorrer um erro
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("email", email);
+        verify(query).getResultList();
+    }
+
+    // Método findClientByCpf
+    @Test
+    @DisplayName("Should successfully find the client by cpf.")
+    void shouldSuccessfullyFindTheClientByCpf() {
+        // Arrange - criamos um cpf válido
+        String cpf = "18068803009";
+
+        // Criamos uma lista com um cliente
+        List<Object[]> expectedResultList = new ArrayList<>();
+        expectedResultList.add(new Object[]{1, "Osvaldo Pires", "osvaldo@gmail.com", "18068803009",  java.sql.Date.valueOf(LocalDate.of(1990, 1, 1))});
+
+        Object[] expectedResult = expectedResultList.get(0);
+        ClientDto expectedClientDto = new ClientDto();
+        expectedClientDto.setId(((Number) expectedResult[0]).longValue());
+        expectedClientDto.setName((String) expectedResult[1]);
+        expectedClientDto.setEmail((String) expectedResult[2]);
+        expectedClientDto.setCpf((String) expectedResult[3]);
+        expectedClientDto.setBirth(((Date) expectedResult[4]).toLocalDate());
+
+        // Simulamos criar uma NativeQuery
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        // Simulamos setar o parametro cpf
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        // Simulamos executar a query e retornar a lista que montamos manualmente
+        when(query.getResultList()).thenReturn(expectedResultList);
+
+        //Executamos o método que queremos testar
+        ClientDto returnedClient = clientRepository.findClientByCpf(cpf);
+
+        // Verificamos se o cliente retornado é igual ao esperado
+        assertEquals(returnedClient.getId(), expectedClientDto.getId());
+        assertEquals(returnedClient.getName(), expectedClientDto.getName());
+        assertEquals(returnedClient.getEmail(), expectedClientDto.getEmail());
+        assertEquals(returnedClient.getCpf(), expectedClientDto.getCpf());
+        assertEquals(returnedClient.getBirth(), expectedClientDto.getBirth());
+
+        // Verificamos se os métodos foram chamados como o esperado
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when is not found client by cpf.")
+    void shouldThrowExceptionWhenIsNotFoundClientByCpf() {
+        // Arrange - criamos um cpf válido
+        String cpf = "18068803009";
+
+        // Criamos uma lista vazia para simular que o retorno da lista é empty
+        List<Object[]> expectedList = new ArrayList<>();
+
+        // Simulamos criar uma NativeQuery para buscar o banco de dados no banco
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+
+        when(query.getResultList()).thenReturn(expectedList);
+
+        // Afirmamos um erro ao executar o método (porque a lista veio vazia)
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.findClientByCpf(cpf);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Cliente não encontrado pelo CPF: " + cpf, exception.getMessage());
+
+        // Verificamos se todas etapas foram executadas antes de ocorrer um erro
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).getResultList();
+    }
+
 
 }

@@ -4,6 +4,7 @@ import com.rodrigopettenon.orderflow.dtos.ClientDto;
 import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
+import jakarta.persistence.Cache;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -152,32 +153,41 @@ public class ClientRepository {
         }
         catch (ClientErrorException e) {
             throw e; // Não capturar e engolir a exceção esperada
-        }catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new ClientErrorException("Erro ao buscar cliente pelo id: " + id);
         }
     }
 
     public ClientModel findClientModelById(Long id) {
-        String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1 " );
+        try {
+            String sql = (" SELECT id, name, email, cpf, birth_date FROM tb_clients WHERE id = :id LIMIT 1 ");
 
-        Query query = em.createNativeQuery(sql)
-                .setParameter("id", id);
+            Query query = em.createNativeQuery(sql)
+                    .setParameter("id", id);
 
-        List<Object[]> resultList = query.getResultList();
+            List<Object[]> resultList = query.getResultList();
 
-        if (resultList.isEmpty()) {
-            throw new ClientErrorException("Cliente não encontrado pelo id:" + id);
+            if (resultList.isEmpty()) {
+                throw new ClientErrorException("Cliente não encontrado pelo id: " + id);
+            }
+
+            Object[] result = resultList.get(0);
+            ClientModel clientModel = new ClientModel();
+            clientModel.setId(((Number) result[0]).longValue());
+            clientModel.setName((String) result[1]);
+            clientModel.setEmail((String) result[2]);
+            clientModel.setCpf((String) result[3]);
+            clientModel.setBirth(((Date) result[4]).toLocalDate());
+
+            return clientModel;
         }
-
-        Object[] result = resultList.get(0);
-        ClientModel clientModel = new ClientModel();
-        clientModel.setId(((Number) result[0]).longValue());
-        clientModel.setName((String) result[1]);
-        clientModel.setEmail((String) result[2]);
-        clientModel.setCpf((String) result[3]);
-        clientModel.setBirth(((Date) result[4]).toLocalDate());
-
-        return clientModel;
+        catch (ClientErrorException e) {
+            throw e; // Não capturar e engolir a exceção esperada
+        }
+        catch (Exception e) {
+            throw new ClientErrorException("Erro ao buscar cliente pelo ID" + id);
+        }
     }
 
     public ClientDto findClientByEmail(String email) {
@@ -203,7 +213,11 @@ public class ClientRepository {
 
             logFoundClientByEmailSuccessfully(email);
             return clientFound;
-        } catch (Exception e) {
+        }
+        catch (ClientErrorException e) {
+            throw e; // Não capturar e engolir a exceção esperada
+        }
+        catch (Exception e) {
             logUnexpectedErrorOnFindClientByEmail(email, e);
             throw new ClientErrorException("Erro ao buscar cliente pelo email.");
         }
@@ -231,7 +245,10 @@ public class ClientRepository {
 
             logFoundClientByCpfSuccessfully(cpf);
             return clientFound;
-        } catch (Exception e) {
+        }catch (ClientErrorException e) {
+            throw e; // Não capturar e engolir a exceção esperada
+        }
+        catch (Exception e) {
             logUnexpectedErrorOnFindClientByCpf(cpf, e);
             throw new ClientErrorException("Erro ao buscar cliente pelo CPF.");
         }
