@@ -4,11 +4,11 @@ import com.rodrigopettenon.orderflow.dtos.ClientDto;
 import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
-import jakarta.persistence.Cache;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
+
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -332,7 +332,7 @@ public class ClientRepository {
             return clientPageDto;
     }
 
-    private List<ClientDto> queryFindFilteredClients(String name, String email, String cpf,
+    protected List<ClientDto> queryFindFilteredClients(String name, String email, String cpf,
                                                      LocalDate birthStart, LocalDate birthEnd, Integer page,
                                                      Integer linesPerPage, String direction, String orderBy) {
         try {
@@ -392,7 +392,7 @@ public class ClientRepository {
         }
     }
 
-    private Long queryCountFilteredClients(String name,
+    protected Long queryCountFilteredClients(String name,
                                                     String email, String cpf, LocalDate birthStart,
                                                     LocalDate birthEnd) {
         try {

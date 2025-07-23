@@ -5,10 +5,10 @@ import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-import jakarta.websocket.ClientEndpoint;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -781,5 +782,336 @@ class ClientRepositoryTest {
         verify(query).getResultList();
     }
 
+    @Test
+    @DisplayName("Should ThrowException when an error occurs executing query to find client by cpf.")
+    void shouldThrowExceptionWhenAnErrorOccursExecutingQueryToFindClientByCpf() {
+        // Arrange - Criamos um cpf válido
+        String cpf = "18068803009";
+
+        // Simulamos criar uma NativeQuery para buscar um clientModel pelo cpf.
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.getResultList()).thenThrow(new RuntimeException("Simulated Exception"));
+
+        // Afirmamos uma exceção ao executar o método
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.findClientByCpf(cpf);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Erro ao buscar cliente pelo CPF.", exception.getMessage());
+
+        // Verificamos se tudo simulado foi executado antes de ocorrer o erro
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).getResultList();
+    }
+
+    // Método updateClientByCpf
+    @Test
+    @DisplayName("Should update the client by cpf successfully and return the dto.")
+    void shouldUpdateTheClientByCpfSuccessfully() {
+        // Arrange - criamos um CPF válido
+        String cpf = "18068803009";
+
+        // Criamos um dto de Cliente válido que queremos que seja retornado após o update
+        ClientDto expectedClient = new ClientDto();
+        expectedClient.setName("Mano Brown");
+        expectedClient.setEmail("manobrown@gmaill.com");
+        expectedClient.setBirth(LocalDate.of(1975, 1, 1));
+
+        // Simulamos criar uma NativeQuery para update no cliente
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("name", expectedClient.getName())).thenReturn(query);
+        when(query.setParameter("email", expectedClient.getEmail())).thenReturn(query);
+        when(query.setParameter("birth", expectedClient.getBirth())).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1); // Retorno de quantas entities foram alteradas
+
+        // Executamos o método que queremos testar
+        ClientDto returnedClient = clientRepository.updateClientByCpf(cpf, expectedClient);
+
+        // Verificar se os dados do cliente retornado é igual ao esperado
+        assertEquals(returnedClient.getName(), expectedClient.getName());
+        assertEquals(returnedClient.getEmail(), expectedClient.getEmail());
+        assertEquals(returnedClient.getBirth(), expectedClient.getBirth());
+
+        // Verificar se todas etapas da criação da query foram feitas como esperado
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("name", expectedClient.getName());
+        verify(query).setParameter("email", expectedClient.getEmail());
+        verify(query).setParameter("birth", expectedClient.getBirth());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when an error occurs while executing query to update client by cpf.")
+    void shouldThrowExceptionWhenAnErrorOccursWhileExecutingQueryToUpdateClientByCpf() {
+        // Informamos dados válido que um cliente pode ter
+        String name = "Rogério";
+        String email = "rogerio@gmail.com";
+        String cpf = "18068803009";
+        LocalDate birth = LocalDate.of(1985, 1, 1);
+
+        // Criamos um dto com os dados informados
+        ClientDto expectedClient = new ClientDto();
+        expectedClient.setName(name);
+        expectedClient.setEmail(email);
+        expectedClient.setBirth(birth);
+
+        // Simulamos criar uma NativeQuery para update no cliente
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("name", name)).thenReturn(query);
+        when(query.setParameter("email", email)).thenReturn(query);
+        when(query.setParameter("birth", birth)).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(new RuntimeException("Simulated Exception"));
+
+        // Afirmamos uma exceção ao executar o método que estamos testando
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+           clientRepository.updateClientByCpf(cpf, expectedClient);
+        });
+
+        assertEquals("Erro ao realizar atualização cadastral do cliente.", exception.getMessage());
+
+        // Verificar se todos os passos de criação da query foram feitos antes do erro
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("name", expectedClient.getName());
+        verify(query).setParameter("email", expectedClient.getEmail());
+        verify(query).setParameter("birth", expectedClient.getBirth());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).executeUpdate();
+
+    }
+
+    // Método deleteClientByCpf
+    @Test
+    @DisplayName("Should successfully delete the client by cpf.")
+    void shouldSuccessfullyDeleteTheClientByCpf() {
+        // Informamos um CPF válido para a deleção
+        String cpf = "18068803009";
+
+        // Simulamos criar uma NativeQuery para realizar a deleçao do cliente pelo cpf
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(1); // Número de clientes que foram deletados
+
+        // Executamos o método que queremos testar
+        clientRepository.deleteClientByCpf(cpf);
+
+        // Verificamos se todas etapas de criação da query foram realizadas
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when an error occurs while executing query to delete client by cpf.")
+    void shouldThrowExceptionWhenAnErrorOccursWhileExecutingQueryToDeleteClientByCpf() {
+        // Informamos um CPF válido para a deleção
+        String cpf = "18068803009";
+
+        // Simulamos criar uma NativeQuery para realizar a deleçao do cliente pelo cpf
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(new RuntimeException("Simulated Exception")); // Simulamos uma exception
+
+        // Afirmamos a exceção ao executar o método que estamos testando
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.deleteClientByCpf(cpf);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Erro ao realizar a deleção do cliente pelo cpf.", exception.getMessage());
+
+        // Verificamos se a criação da query foi feita
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("cpf", cpf);
+        verify(query).executeUpdate();
+    }
+
+    // Método countTotalClients
+    @Test
+    @DisplayName("Should successfully count the total number of clients.")
+    void shouldSuccessfullyCountTheTotalNumberOfClients() {
+        // Criamos uma váriavel para simular o resultado da query
+        Object expectedResult = 6; // Retorno em Object (assim como no método do repository)
+        Number convertedResultType = (Number) expectedResult;
+
+        // Simulamos criar uma NativeQuery para contar todos clientes do banco
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(expectedResult);
+
+        // Executamos o método que queremos testar
+        Object returnedResult = clientRepository.countTotalClients();
+
+        // Verificamos se o resultado retornado é igual ao esperado
+        assertEquals(returnedResult, convertedResultType.longValue());
+
+        // Verificamos se os passos de criação da query e execução foram feitos corretamente
+        verify(em).createNativeQuery(anyString());
+        verify(query).getSingleResult();
+    }
+
+    @Test
+    @DisplayName("Should ThrowException when error occurs while counting clients.")
+    void shouldThrowExceptionWhenAnErrorOccursWhileExecutingQueryToCountTotalNumberOfClients() {
+        // Simulamos criar uma NativeQuery para contar todos clientes do banco
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.getSingleResult()).thenThrow(new RuntimeException("Simulated Exception"));
+
+        // Executamos o método que queremos testar
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.countTotalClients();
+        });
+
+        // Verificamos se o resultado retornado é igual ao esperado
+        assertEquals("Erro ao contar total de clientes.", exception.getMessage());
+
+        // Verificamos se os passos de criação da query e execução foram feitos corretamente
+        verify(em).createNativeQuery(anyString());
+        verify(query).getSingleResult();
+    }
+
+    // Método queryFindFilteredClients
+    @Test
+    @DisplayName("Should successfully return filtered clients.")
+    void shouldSuccessfullyReturnFilteredClients() {
+        // Informamos filtros válidos
+        String name = "Rogerin"; // Nome incompleto porém válido para a busca
+        String email = "rogerin@gmail.com"; // email incompleto porém válido para a busca
+        String cpf = "18068803009";
+        LocalDate birthStart = LocalDate.of(1990, 1, 1); // filtro birthStart válido
+        LocalDate birthEnd = LocalDate.of(2000, 1, 1); // filtro birthEnd válido
+
+        // Paginação e ordenação
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = "asc";
+        String orderBy = "name";
+
+        // Criamos a lista que será retornada pelo método
+        List<Object[]> expectedResultList = new ArrayList<>();
+        expectedResultList.add(new Object[]{"DJ Rogerinho", "djrogerinho@gmail.com",
+                "18068803009", java.sql.Date.valueOf(LocalDate.of(1995, 10, 4))});
+
+        // Simulamos criar uma NativeQuery para encontrar clientes filtrados e paginados
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("name", "%" + name + "%")).thenReturn(query);
+        when(query.setParameter("email", "%" + email + "%")).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.setParameter("birthStart", birthStart)).thenReturn(query);
+        when(query.setParameter("birthEnd", birthEnd)).thenReturn(query);
+        when(query.setParameter("limit", linesPerPage)).thenReturn(query);
+        when(query.setParameter("offset", page * linesPerPage)).thenReturn(query);
+        when(query.getResultList()).thenReturn(expectedResultList);
+
+        // Transformamos nosso resultList esperado em uma lista convertida
+        List<ClientDto> expectedConvertedResultList = new ArrayList<>();
+
+        // Varredura da lista para realizar a conversão dos campos
+        for (Object[] result : expectedResultList) {
+            ClientDto clientDto = new ClientDto();
+            clientDto.setName((String) result[0]);
+            clientDto.setEmail((String) result[1]);
+            clientDto.setCpf((String) result[2]);
+            clientDto.setBirth(((Date) result[3]).toLocalDate());
+
+            expectedConvertedResultList.add(clientDto);
+        }
+
+        // Executamos o método que queremos testar
+        List<ClientDto> returnedResultList = clientRepository.queryFindFilteredClients(name, email, cpf,
+                birthStart, birthEnd, page, linesPerPage, direction, orderBy);
+
+        // Verificando se a lista retornada está igual a lista esperada
+        IntStream.range(0, returnedResultList.size())
+                .forEach(i -> {
+                    assertEquals(returnedResultList.get(i).getName(), expectedConvertedResultList.get(i).getName());
+                    assertEquals(returnedResultList.get(i).getEmail(), expectedConvertedResultList.get(i).getEmail());
+                    assertEquals(returnedResultList.get(i).getCpf(), expectedConvertedResultList.get(i).getCpf());
+                    assertEquals(returnedResultList.get(i).getBirth(), expectedConvertedResultList.get(i).getBirth());
+                });
+
+        // Verificando se todos os passos da criação da query foram feitos
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("name", "%" + name + "%");
+        verify(query).setParameter("email", "%" + email + "%");
+        verify(query).setParameter("cpf", cpf);
+        verify(query).setParameter("birthStart", birthStart);
+        verify(query).setParameter("birthEnd", birthEnd);
+        verify(query).setParameter("limit", linesPerPage);
+        verify(query).setParameter("offset", page * linesPerPage);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should successfully return filtered clients without filters and correct pagination and orderBy.")
+    void shouldSuccessfullyReturnFilteredClientsWithoutFiltersAndCorrectPaginationAndOrderBy() {
+
+        // Paginação e ordenação
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = "asc";
+        String orderBy = "name";
+
+        // Criamos a lista que será retornada pelo método
+        List<Object[]> expectedResultList = new ArrayList<>();
+        expectedResultList.add(new Object[]{"Bolsonaro", "bolsonaro@gmail.com",
+                "74624357051", java.sql.Date.valueOf(LocalDate.of(1972, 10, 4))
+        });
+        expectedResultList.add(new Object[]{"DJ Rogerinho", "djrogerinho@gmail.com",
+                "18068803009", java.sql.Date.valueOf(LocalDate.of(1995, 10, 4))
+        });
+
+        // Simulamos criar uma NativeQuery para encontrar clientes filtrados e paginados
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("limit", linesPerPage)).thenReturn(query);
+        when(query.setParameter("offset", page * linesPerPage)).thenReturn(query);
+        when(query.getResultList()).thenReturn(expectedResultList);
+
+        // Transformamos nosso resultList esperado em uma lista convertida
+        List<ClientDto> expectedConvertedResultList = new ArrayList<>();
+
+        // Varredura da lista para realizar a conversão dos campos
+        for (Object[] result : expectedResultList) {
+            ClientDto clientDto = new ClientDto();
+            clientDto.setName((String) result[0]);
+            clientDto.setEmail((String) result[1]);
+            clientDto.setCpf((String) result[2]);
+            clientDto.setBirth(((Date) result[3]).toLocalDate());
+
+            expectedConvertedResultList.add(clientDto);
+        }
+
+        // Executamos o método que queremos testar
+        List<ClientDto> returnedResultList = clientRepository.queryFindFilteredClients(null , null, null,
+                null, null, page, linesPerPage, direction, orderBy);
+
+        // Captura da query SQL que foi construida
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        verify(em, times(1)).createNativeQuery(queryCaptor.capture());
+
+        String builtQuery = queryCaptor.getValue();
+
+        // Verificações do conteúdo da query
+        assertTrue(builtQuery.toLowerCase().contains("order by name asc"));
+
+        // Verificando se a lista retornada está igual a lista esperada
+        IntStream.range(0, returnedResultList.size())
+                .forEach(i -> {
+                    assertEquals(returnedResultList.get(i).getName(), expectedConvertedResultList.get(i).getName());
+                    assertEquals(returnedResultList.get(i).getEmail(), expectedConvertedResultList.get(i).getEmail());
+                    assertEquals(returnedResultList.get(i).getCpf(), expectedConvertedResultList.get(i).getCpf());
+                    assertEquals(returnedResultList.get(i).getBirth(), expectedConvertedResultList.get(i).getBirth());
+                });
+
+        // Verificando se todos os passos da criação da query foram feitos
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("limit", linesPerPage);
+        verify(query).setParameter("offset", page * linesPerPage);
+        verify(query).getResultList();
+    }
 
 }
