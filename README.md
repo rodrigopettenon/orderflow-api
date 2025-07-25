@@ -168,7 +168,7 @@ http://localhost:8080
 ---
 
 ### Melhorias Futuras
-- Conclusão dos testes unitários e início dos testes de integração
+- Conclusão dos testes unitários e dos testes de integração 
 - Documentação interativa com Swagger/OpenAPI
 - Autenticação e controle de acesso (JWT ou OAuth2)
 - Relatórios e exportação de dados
