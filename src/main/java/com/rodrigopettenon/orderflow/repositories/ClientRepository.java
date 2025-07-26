@@ -355,7 +355,7 @@ public class ClientRepository {
                 sql.append(" AND cpf = :cpf ");
                 parameters.put("cpf", cpf);
             }
-            if (nonNull(birthStart) && nonNull(birthEnd)) {
+            if (nonNull(birthStart)) {
                 sql.append(" AND birth_date >= :birthStart ");
                 parameters.put("birthStart", birthStart);
             }

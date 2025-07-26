@@ -1,6 +1,7 @@
 package com.rodrigopettenon.orderflow.repositories;
 
 import com.rodrigopettenon.orderflow.dtos.ClientDto;
+import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.models.ClientModel;
 import jakarta.persistence.EntityManager;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1049,7 +1051,6 @@ class ClientRepositoryTest {
     @Test
     @DisplayName("Should successfully return filtered clients without filters and correct pagination and orderBy.")
     void shouldSuccessfullyReturnFilteredClientsWithoutFiltersAndCorrectPaginationAndOrderBy() {
-
         // Paginação e ordenação
         Integer page = 0;
         Integer linesPerPage = 10;
@@ -1113,5 +1114,213 @@ class ClientRepositoryTest {
         verify(query).setParameter("offset", page * linesPerPage);
         verify(query).getResultList();
     }
+
+    @Test
+    @DisplayName("Should ThrowException when an error occurs executing query to find filtered clients.")
+    void shouldThrowExceptionWhenAnErrorOccursExecutingQueryToFindFilteredClients() {
+        // Informamos parâmetros válidos
+        String name = "Rodrigo";
+        String email = "rodrigo@gmail.com";
+        String cpf = "74624357051";
+        LocalDate birthStart = LocalDate.of(1990, 2, 23);
+        LocalDate birthEnd = LocalDate.of(2000, 3, 4);
+
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = "asc";
+        String orderBy = "name";
+
+        // Simulamos montar a Native Query
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+
+        when(query.setParameter("name", "%" + name + "%")).thenReturn(query);
+        when(query.setParameter("email", "%" + email + "%")).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.setParameter("birthEnd", birthEnd)).thenReturn(query);
+        when(query.setParameter("birthStart", birthStart)).thenReturn(query);
+        when(query.setParameter("limit", linesPerPage)).thenReturn(query);
+        when(query.setParameter("offset", page * linesPerPage)).thenReturn(query);
+
+        // Indicamos que ao executar ao tentar obter retorno da query acontece uma exception
+        when(query.getResultList()).thenThrow(new RuntimeException("Simulated Exception"));
+
+        // Afirmamos a exceção ao executar o método que estamos testando
+        ClientErrorException exception = assertThrows(ClientErrorException.class, () -> {
+            clientRepository.queryFindFilteredClients(name, email, cpf, birthStart, birthEnd,
+                    page, linesPerPage, direction, orderBy);
+        });
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Erro ao buscar clientes filtrados.", exception.getMessage());
+
+        // Verificamos se todos passos anteriores ao erro foram executados
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("name", "%" + name + "%");
+        verify(query).setParameter("email", "%" + email + "%");
+        verify(query).setParameter("cpf", cpf);
+        verify(query).setParameter("birthStart", birthStart);
+        verify(query).setParameter("birthEnd", birthEnd);
+        verify(query).setParameter("limit", linesPerPage);
+        verify(query).setParameter("offset", page * linesPerPage);
+        verify(query).getResultList();
+    }
+
+    @Test
+    @DisplayName("Should return the total number of filtered clients.")
+    void shouldReturnTheTotalNumberOfFilteredClients() {
+        // Informamos parâmetros válidos
+        String name = "Rodrigo";
+        String email = "rodrigo@gmail.com";
+        String cpf = "74624357051";
+        LocalDate birthStart = LocalDate.of(1990, 2, 23);
+        LocalDate birthEnd = LocalDate.of(2000, 3, 4);
+
+        // Váriavel object que será o resultado da query
+        Object result = 1;
+        Number expectedResult = (Number) result;
+
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("name", "%" + name + "%")).thenReturn(query);
+        when(query.setParameter("email", "%" + email + "%")).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.setParameter("birthStart", birthStart)).thenReturn(query);
+        when(query.setParameter("birthEnd", birthEnd)).thenReturn(query);
+
+        when(query.getSingleResult()).thenReturn(expectedResult);
+
+        // Executamos o método que queremos testar
+        Object returnedResult = clientRepository.queryCountFilteredClients(name, email, cpf, birthStart, birthEnd);
+
+        // Verificamos se o resultado retornado é igual o esperado
+        assertEquals(returnedResult, expectedResult.longValue());
+
+        // Verificamos se todos os passos foram seguidos como o esperado
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("name", "%" + name + "%");
+        verify(query).setParameter("email", "%" + email + "%");
+        verify(query).setParameter("cpf", cpf);
+        verify(query).setParameter("birthStart", birthStart);
+        verify(query).setParameter("birthEnd", birthEnd);
+        verify(query).getSingleResult();
+
+    };
+
+    @Test
+    @DisplayName("Should return the total number of filtered clients without filters.")
+    void shouldReturnTheTotalNumberOfFilteredClientsWithoutFilters() {
+
+        // Váriavel object que será o resultado da query
+        Object result = 12;
+        Number expectedResult = (Number) result;
+
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.getSingleResult()).thenReturn(expectedResult);
+
+        // Executamos o método que queremos testar
+        Object returnedResult = clientRepository.queryCountFilteredClients(null, null, null, null, null);
+
+        // Verificamos se o resultado retornado é igual o esperado
+        assertEquals(returnedResult, expectedResult.longValue());
+
+        // Verificamos se todos os passos foram seguidos como o esperado
+        verify(em).createNativeQuery(anyString());
+        verify(query).getSingleResult();
+
+    };
+
+    @Test
+    @DisplayName("Should ThrowException when an error occurs executing the query to count total number of filtered clients.")
+    void shouldThrowExceptionWhenAnErrorOccursExecutingTheQueryToCountTotalNumberOfFilteredClients() {
+        // Informamos parâmetros válidos
+        String name = "Rodrigo";
+        String email = "rodrigo@gmail.com";
+        String cpf = "74624357051";
+        LocalDate birthStart = LocalDate.of(1990, 2, 23);
+        LocalDate birthEnd = LocalDate.of(2000, 3, 4);
+
+        when(em.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter("name", "%" + name + "%")).thenReturn(query);
+        when(query.setParameter("email", "%" + email + "%")).thenReturn(query);
+        when(query.setParameter("cpf", cpf)).thenReturn(query);
+        when(query.setParameter("birthStart", birthStart)).thenReturn(query);
+        when(query.setParameter("birthEnd", birthEnd)).thenReturn(query);
+
+        when(query.getSingleResult()).thenThrow(new RuntimeException("Simulated Error"));
+
+        // Afirmamos a exceção no método que estamos testando
+        ClientErrorException exception = assertThrows(ClientErrorException.class,() -> {
+            clientRepository.queryCountFilteredClients(name, email, cpf, birthStart, birthEnd);
+        });
+
+        // Verificamos se a mensagem de erro é igual a esperada
+        assertEquals("Erro ao contar clientes filtrados.", exception.getMessage());
+
+        // Verificamos se todos os passos foram seguidos como o esperado antes da exception
+        verify(em).createNativeQuery(anyString());
+        verify(query).setParameter("name", "%" + name + "%");
+        verify(query).setParameter("email", "%" + email + "%");
+        verify(query).setParameter("cpf", cpf);
+        verify(query).setParameter("birthStart", birthStart);
+        verify(query).setParameter("birthEnd", birthEnd);
+        verify(query).getSingleResult();
+    };
+
+    @Test
+    @DisplayName("Should return dto with a list of filtered clients and the total number of clients.")
+    void shouldReturnDtoWithAListOfFilteredClientsAndTheTotalNumberOfClients() {
+
+        // Informamos parâmetros válidos
+        String name = "Rodrigo Pettenon";
+        String email = "rodrigo@gmail.com";
+        String cpf = "74624357051";
+        LocalDate birthStart = LocalDate.of(1990, 2, 23);
+        LocalDate birthEnd = LocalDate.of(2000, 3, 4);
+
+        Integer page = 0;
+        Integer linesPerPage = 10;
+        String direction = "asc";
+        String orderBy = "name";
+
+        //Criamos uma lista de clientes
+        List<ClientDto> clientDtoList = new ArrayList<>();
+        ClientDto clientDto = new ClientDto();
+        clientDto.setName(name);
+        clientDto.setEmail(email);
+        clientDto.setCpf(cpf);
+        clientDto.setBirth(LocalDate.of(1998, 10, 1));
+        clientDtoList.add(clientDto);
+
+        // Criamos uma Long de total de clientes
+        Long total = 1L;
+
+        // Criamos um GlobalPageDto que será retornado pelo método e setamos a lista de clientes e o total
+        GlobalPageDto<ClientDto> expectedClientPageDto = new GlobalPageDto<>();
+        expectedClientPageDto.setItems(clientDtoList);
+        expectedClientPageDto.setTotal(total);
+
+        ClientRepository spyRepository = Mockito.spy(clientRepository);
+
+        // Simulamos ter sucesso ao obter lista de clientes
+        doReturn(clientDtoList).when(spyRepository).queryFindFilteredClients(name, email, cpf,
+                birthStart, birthEnd, page, linesPerPage, direction, orderBy);
+
+        // Simulamos ter sucesso ao obter o total de clientes
+        doReturn(total).when(spyRepository).queryCountFilteredClients(name, email, cpf, birthStart, birthEnd);
+
+        // Executamos o método que queremos testar
+        GlobalPageDto<ClientDto> returnedClientPageDto = spyRepository.findFilteredClients(name, email, cpf,
+                birthStart, birthEnd, page, linesPerPage, direction, orderBy);
+
+        // Verificamos se o ClientPageDto retornado foi igual ao esperado
+        assertNotNull(returnedClientPageDto);
+        assertEquals(returnedClientPageDto.getItems(), expectedClientPageDto.getItems());
+        assertEquals(returnedClientPageDto.getTotal(), expectedClientPageDto.getTotal());
+
+        // Verificamos se o método foi chamado como o esperado
+        verify(spyRepository).queryCountFilteredClients(name, email, cpf,
+                birthStart, birthEnd);
+        verify(spyRepository).queryFindFilteredClients(name, email, cpf,
+                birthStart, birthEnd, page, linesPerPage, direction, orderBy);
+    };
+
 
 }
