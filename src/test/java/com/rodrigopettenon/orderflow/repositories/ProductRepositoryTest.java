@@ -458,5 +458,28 @@ class ProductRepositoryTest {
         verify(query).getResultList();
     }
 
+    @Test
+    @DisplayName("Should throw ClientErrorException when unexpected error occurs while finding product by SKU")
+    void shouldThrowClientErrorExceptionWhenUnexpectedErrorOccursOnFindBySku() {
+        // Simulamos um SKU qualquer
+        String sku = "SKU123";
+
+        // Simulamos que createNativeQuery lança uma exceção inesperada (ex: NullPointerException)
+        when(em.createNativeQuery(anyString())).thenThrow(new RuntimeException("Erro simulado"));
+
+        // Executamos o método e verificamos se a exceção esperada é lançada
+        ClientErrorException exception = assertThrows(
+                ClientErrorException.class,
+                () -> productRepository.findProductBySku(sku)
+        );
+
+        // Verificamos se a mensagem da exceção é a esperada
+        assertEquals("Erro ao buscar produto pelo SKU.", exception.getMessage());
+
+        // Verificamos se o EntityManager tentou criar a query antes do erro
+        verify(em).createNativeQuery(anyString());
+    }
+
+
 
 }
