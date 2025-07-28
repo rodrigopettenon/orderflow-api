@@ -134,7 +134,10 @@ public class ProductRepository {
 
             return productModel;
 
-        } catch (Exception e) {
+        }catch (ClientErrorException e) {
+            throw e; // Não capturar e engolir a exceção esperada
+        }
+        catch (Exception e) {
             throw new ClientErrorException("Erro ao buscar produto pelo id.");
         }
     }
@@ -161,7 +164,10 @@ public class ProductRepository {
 
             logFoundProductBySkuSuccessfully(sku);
             return productDtoFound;
-        } catch (Exception e) {
+        }catch (ClientErrorException e) {
+            throw  e;  // Não capturar e engolir a exceção esperada
+        }
+        catch (Exception e) {
             logUnexpectedErrorOnFindProductBySku(sku, e);
             throw new ClientErrorException("Erro ao buscar produto pelo SKU.");
         }
