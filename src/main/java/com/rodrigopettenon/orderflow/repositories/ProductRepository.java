@@ -194,8 +194,6 @@ public class ProductRepository {
             logUnexpectedErrorOnUpdateProductBySku(sku, e);
             throw new ClientErrorException("Erro ao realizar atualização no produto pelo SKU.");
         }
-
-
     }
 
     public void deleteProductBySku(String sku) {
@@ -245,7 +243,7 @@ public class ProductRepository {
             return productPageDto;
     }
 
-    private List<ProductDto> queryFindFilteredProducts(String name, String sku, Double minPrice,
+    protected List<ProductDto> queryFindFilteredProducts(String name, String sku, Double minPrice,
                                                        Double maxPrice, Integer page, Integer linesPerPage,
                                                        String fixedDirection, String fixedOrderBy) {
         try {
@@ -299,7 +297,7 @@ public class ProductRepository {
         }
     }
 
-    private Long queryCountFilteredProducts(String name, String sku,
+    protected Long queryCountFilteredProducts(String name, String sku,
                                                      Double minPrice, Double maxPrice){
         try {
             Map<String, Object> parameters = new HashMap<>();
@@ -339,7 +337,7 @@ public class ProductRepository {
 
     }
 
-    private void setQueryParameters(Query query, Map<String, Object> parameters) {
+    void setQueryParameters(Query query, Map<String, Object> parameters) {
         for (Map.Entry<String, Object> param : parameters.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());
         }
