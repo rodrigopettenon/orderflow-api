@@ -33,6 +33,7 @@ import static org.mockito.Mockito.*;
 class ClientRepositoryTest {
 
     private static final Logger log = LoggerFactory.getLogger(ClientRepositoryTest.class);
+
     @InjectMocks
     private ClientRepository clientRepository;
 

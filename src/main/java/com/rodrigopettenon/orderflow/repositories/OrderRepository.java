@@ -96,7 +96,10 @@ public class OrderRepository {
 
             logFindOrderByIdSuccessfully(id);
             return orderDto;
-        } catch (Exception e) {
+        }catch (ClientErrorException e) {
+            throw e; // para o erro genérico não engolir a exceção de lista vazia
+        }
+        catch (Exception e) {
             logUnexpectedErrorOnFindOrderById(id, e);
             throw new ClientErrorException("Erro ao buscar pedido pelo id");
         }

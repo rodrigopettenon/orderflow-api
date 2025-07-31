@@ -636,6 +636,7 @@ class OrderServiceTest {
     void shouldThrowExceptionWhenClientIdIsNotFound() {
         // Arrange
         Long clientId = 1L;
+
         when(clientRepository.existsClientById(clientId)).thenReturn(false);
 
         // Act & Assert
@@ -643,6 +644,8 @@ class OrderServiceTest {
                 orderService.findFilteredOrdersDetails(null, clientId, null, null, null, null, null, 0, 10, "asc", "order_date"));
 
         assertEquals("O id do cliente informado não está cadastrado.", ex.getMessage());
+
+        verify(clientRepository).existsClientById(clientId);
     }
 
     @Test
@@ -1028,10 +1031,5 @@ class OrderServiceTest {
 
         assertEquals("O status informado é inválido: SHIPPED", exception.getMessage());
     }
-
-
-
-
-
 }
 
