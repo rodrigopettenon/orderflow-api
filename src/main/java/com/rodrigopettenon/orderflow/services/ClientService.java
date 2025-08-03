@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import static com.rodrigopettenon.orderflow.utils.StringsValidation.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 @Service
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -298,4 +300,91 @@ public class ClientService {
         }
     }
 
+    public GlobalPageDto<ClientDto> findClientByIdOrNameOrEmailOrCpf(String identifier, Integer page,
+                                                                     Integer linesPerPage, String direction,
+                                                                     String orderBy) {
+        if (isBlank(identifier)) {
+            return emptyGlobalPage();
+        }
+
+        String id = checkIfIsId(identifier);
+        String name = checkIfIsName(identifier);
+        String email = checkIfIsEmail(identifier);
+        String cpf = checkIfIsCpf(identifier);
+
+        if (isBlank(id) && isBlank(name) && isBlank(email) && isBlank(cpf)) {
+            return emptyGlobalPage();
+        }
+
+        Integer sanitizedPage = sanitizePage(page);
+        Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
+        String fixedDirection = resolveDirectionOrDefault(direction);
+        String fixedOrderBy = resolveOrderByOrDefault(orderBy);
+
+        return clientRepository.findClientsByIdOrNameOrEmailOrCpf(id, cpf, name, email,
+                sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
+    }
+
+
+    private GlobalPageDto<ClientDto> emptyGlobalPage() {
+        GlobalPageDto<ClientDto> emptyGlobalPage = new GlobalPageDto<>();
+        emptyGlobalPage.setItems(new ArrayList<>());
+        emptyGlobalPage.setTotal(0L);
+        return emptyGlobalPage;
+    }
+
+    private String checkIfIsId(String identifier) {
+        logClientIdValidation(identifier);
+        String sanitizedId = removeAllSpaces(identifier);
+
+        if (isBlank(sanitizedId) || !isNumeric(sanitizedId) || sanitizedId.length() > 9 || sanitizedId.matches("0+")) {
+            return null;
+        }
+
+        return sanitizedId;
+    }
+
+    private String checkIfIsName(String identifier) {
+        logClientNameValidation(identifier);
+
+        if (isBlank(identifier)) {
+            return null;
+        }
+        if (identifier.contains("@") && isValidEmail(removeAllSpaces(identifier))) {
+            return null;
+        }
+
+        String nameWithNormalizedSpaces = normalizeSpaces(identifier);
+        String sanitizedName = removeNumbersAndSymbols(nameWithNormalizedSpaces);
+
+        if (isBlank(sanitizedName) || sanitizedName.length() <= 3) {
+            return null;
+        }
+
+        return sanitizedName;
+    }
+
+    private String checkIfIsEmail(String identifier) {
+        logClientEmailValidation(identifier);
+        String sanitizedEmail = removeAllSpaces(identifier);
+
+        if (isBlank(sanitizedEmail) || !isValidEmail(sanitizedEmail)) {
+            return null;
+        }
+
+        return sanitizedEmail;
+    }
+
+
+
+    private String checkIfIsCpf(String identifier) {
+        logClientCpfFilterValidation(identifier);
+        String sanitizedCpf = removeNonNumericCharacters(identifier);
+
+        if(isBlank(sanitizedCpf) || !isValidCPF(sanitizedCpf)) {
+            return null;
+        }
+
+        return sanitizedCpf;
+    }
 }

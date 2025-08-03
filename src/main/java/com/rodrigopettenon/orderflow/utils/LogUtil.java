@@ -45,6 +45,10 @@ public class LogUtil {
         logFilterValidation("data de nascimento final", birthEnd);
     }
 
+    public static void logClientIdValidation(String id) {
+        logValidation("ID", id);
+    }
+
     public static void logClientNameValidation(String name) {
         logValidation("nome", name);
     }

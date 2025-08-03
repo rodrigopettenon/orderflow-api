@@ -141,7 +141,7 @@ public class ItemOrderRepository {
 
     }
 
-    private List<ItemOrderDto> queryFindFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
+    protected List<ItemOrderDto> queryFindFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
                                                            Integer maxQuantity, Integer page, Integer linesPerPage,
                                                            String direction, String orderBy) {
         try {
@@ -202,7 +202,7 @@ public class ItemOrderRepository {
         }
     }
 
-    private Long queryCountFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
+    protected Long queryCountFilteredItemOrders(UUID id, UUID orderId, UUID productId, Integer minQuantity,
                                               Integer maxQuantity) {
         try {
             Map<String, Object> parameters = new HashMap<>();
@@ -226,7 +226,7 @@ public class ItemOrderRepository {
                 sql.append(" AND quantity >= :minQuantity ");
                 parameters.put("minQuantity", minQuantity);
             }
-            if (!nonNull((maxQuantity))) {
+            if (nonNull((maxQuantity))) {
                 sql.append(" AND quantity <= :maxQuantity ");
                 parameters.put("maxQuantity", maxQuantity);
             }
@@ -267,7 +267,7 @@ public class ItemOrderRepository {
         return itemOrderFullDetailsPage;
     }
 
-    private List<GlobalFullDetailsDto> queryFindFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
+    protected List<GlobalFullDetailsDto> queryFindFullDetailsItemOrders(UUID itemOrderId, UUID productId, UUID orderId,
                                                                       Long clientId, Integer page, Integer linePerPage,
                                                                       String direction, String orderBy) {
         try{
@@ -355,7 +355,7 @@ public class ItemOrderRepository {
         }
     }
 
-    private Long queryCountFullFilteredItemOrderDetails(UUID itemOrderId, UUID productId, UUID orderId,
+    protected Long queryCountFullFilteredItemOrderDetails(UUID itemOrderId, UUID productId, UUID orderId,
                                                         Long clientId) {
         try{
             Map<String, Object> parameters = new HashMap<>();
@@ -397,4 +397,4 @@ public class ItemOrderRepository {
             throw new ClientErrorException("Erro ao contar todos items dos pedidos filtrados com todos detalhes.");
         }
     }
- }
+}

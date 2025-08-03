@@ -53,6 +53,15 @@ public class ClientController extends BaseController{
         return createObjectReturn(clientService.findFilteredClients(name, email, cpf, birthStart, birthEnd, page, linesPerPage, direction, orderBy));
     }
 
+    @GetMapping("/search-by-identifier")
+    public ResponseEntity<?> findByIdOrNameOrEmailOrCpf(@RequestParam(required = true) String identifier,
+                                                        @RequestParam(defaultValue = "0") Integer page,
+                                                        @RequestParam(name = "linesPerPage", defaultValue = "10") Integer linesPerPage,
+                                                        @RequestParam(name = "direction", defaultValue = "asc") String direction,
+                                                        @RequestParam(name = "orderBy", defaultValue = "id") String orderBy) {
+        return createObjectReturn(clientService.findClientByIdOrNameOrEmailOrCpf(identifier, page, linesPerPage, direction, orderBy));
+    }
+
     @GetMapping("/cpf/{cpf}")
     public ResponseEntity<?> findByCPF(@PathVariable(name = "cpf") String cpf) {
         return createObjectReturn(clientService.findByCpf(cpf));

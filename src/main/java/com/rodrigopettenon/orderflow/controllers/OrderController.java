@@ -52,7 +52,7 @@ public class OrderController extends BaseController{
                 status, page, linesPerPage, direction, orderBy));
     }
 
-    @GetMapping("relevant-data")
+    @GetMapping("/relevant-data")
     public ResponseEntity<?> findFilteredRelevantOrderData(@RequestParam(required = false) Long clientId,
                                                            @RequestParam(required = false) LocalDateTime dateTimeStart,
                                                            @RequestParam(required = false) LocalDateTime dateTimeEnd,
@@ -64,7 +64,7 @@ public class OrderController extends BaseController{
         return createObjectReturn(orderService.findFilteredRelevantOrderData(clientId, dateTimeStart, dateTimeEnd, status, page, linesPerPage, direction, orderBy));
     }
 
-    @GetMapping("client-sales-report")
+    @GetMapping("/client-sales-report")
     public ResponseEntity<?> findFilteredClientSalesReport(@RequestParam(required = false) LocalDateTime dateTimeStart,
                                                            @RequestParam(required = false) LocalDateTime dateTimeEnd,
                                                            @RequestParam(required = false) Integer minOrder,

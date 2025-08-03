@@ -127,14 +127,18 @@ public class OrderRepository {
             orderModelFound.setClient(clientModelFound);
             orderModelFound.setOrderDate(((Timestamp) result[2]).toLocalDateTime());
             orderModelFound.setStatus(OrderStatus.valueOf(((String) result[3])));
+
             return orderModelFound;
-        } catch (Exception e) {
+        }catch (ClientErrorException e) {
+            throw e; // para não engolir a exceção caso a lista esteja vazia
+        }
+        catch (Exception e) {
             logUnexpectedErrorOnFindOrderModelById(id, e);
             throw new ClientErrorException("Erro ao buscar o pedido pelo id.");
         }
     }
 
-    private ClientModel findClientModelByOrderId(UUID id) {
+    protected ClientModel findClientModelByOrderId(UUID id) {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append(" SELECT c.id, c.name, c.email, c.cpf, c.birth_date ");
@@ -161,7 +165,10 @@ public class OrderRepository {
             clientModelFound.setBirth(((Date) result[4]).toLocalDate());
 
             return clientModelFound;
-        } catch (Exception e) {
+        }catch (ClientErrorException e) {
+            throw e; // para não engolir a exceção caso a lista esteja vazia
+        }
+        catch (Exception e) {
             throw new ClientErrorException("Erro ao buscar cliente pelo id do pedido.");
         }
     }
@@ -217,7 +224,7 @@ public class OrderRepository {
             return orderPageDto;
     }
 
-    private List<OrderDto> queryFindFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
+    protected List<OrderDto> queryFindFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
                                                    LocalDateTime dateTimeEnd, String status, Integer page,
                                                    Integer linesPerPage, String direction, String orderBy) {
         try{
@@ -277,7 +284,7 @@ public class OrderRepository {
 
     }
 
-    private Long queryCountFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
+    protected Long queryCountFilteredOrders(UUID id, Long clientId, LocalDateTime dateTimeStart,
                                           LocalDateTime dateTimeEnd, String status) {
         try {
             logQueryCountFilteredOrdersStart();
@@ -335,7 +342,7 @@ public class OrderRepository {
         return ordersDetailsPage;
     }
 
-    private Long queryCountFilteredOrdersDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
+    protected Long queryCountFilteredOrdersDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
                                                  LocalDateTime dateTimeEnd, Integer minQuantity, Integer maxQuantity, String status) {
         try{
             logQueryCountFilteredOrdersDetailsStart();
@@ -392,7 +399,7 @@ public class OrderRepository {
         }
     }
 
-    private List<GlobalFullDetailsDto> queryFindFilteredOrdersDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
+    protected List<GlobalFullDetailsDto> queryFindFilteredOrdersDetails(UUID orderId, Long clientId, LocalDateTime dateTimeStart,
                                                                       LocalDateTime dateTimeEnd, Integer minQuantity, Integer maxQuantity,
                                                                       String status, Integer page, Integer linesPerPage, String direction, String orderBy) {
         try {

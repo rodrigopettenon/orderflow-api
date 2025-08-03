@@ -7,6 +7,8 @@ import com.rodrigopettenon.orderflow.models.ClientModel;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
@@ -23,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Repository
 public class ClientRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(ClientRepository.class);
     @PersistenceContext
     private EntityManager em;
 
@@ -440,5 +443,104 @@ public class ClientRepository {
         for (Map.Entry<String, Object> param : parameters.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());
         }
+    }
+
+    public GlobalPageDto<ClientDto> findClientsByIdOrNameOrEmailOrCpf(String id, String cpf, String name,
+                                                                      String email, Integer page, Integer linesPerPage,
+                                                                      String direction, String orderBy) {
+
+        List<ClientDto> clientDtoList = queryFindClientsByIdOrNameOrEmailOrCpf(id, cpf, name, email, page,
+                linesPerPage, direction, orderBy);
+        Long total = queryCountClientsFoundByIdOrNameOrEmailOrCpf(id, cpf, name, email, page);
+
+
+        GlobalPageDto<ClientDto> clientDtoPage = new GlobalPageDto<>();
+        clientDtoPage.setItems(clientDtoList);
+        clientDtoPage.setTotal(total);
+
+        return clientDtoPage;
+    }
+
+    private Long queryCountClientsFoundByIdOrNameOrEmailOrCpf(String id, String cpf, String name, String email, Integer page) {
+        Map<String, Object> parameters = new HashMap<>();
+        StringBuilder sql = new StringBuilder();
+
+        sql.append(" SELECT COUNT(*) FROM tb_clients WHERE 1=1 ");
+
+        if (isNotBlank(id)) {
+            sql.append(" AND id = :id ");
+            parameters.put("id", id);
+        }
+        if (isNotBlank(cpf)) {
+            sql.append(" AND cpf = :cpf ");
+            parameters.put("cpf", cpf);
+        }
+        if (isNotBlank(name)) {
+            sql.append(" AND name = :name ");
+            parameters.put("name", name);
+        }
+        if (isNotBlank(email)) {
+            sql.append(" AND email = :email ");
+            parameters.put("email", email);
+        }
+
+        Query query = em.createNativeQuery(sql.toString());
+        setQueryParameters(query, parameters);
+
+        Object result = query.getSingleResult();
+        Number total = (Number) result;
+
+        return total.longValue();
+    }
+
+    protected List<ClientDto> queryFindClientsByIdOrNameOrEmailOrCpf(String id, String cpf, String name,
+                                                                    String email, Integer page, Integer linesPerPage,
+                                                                    String direction, String orderBy) {
+        Map<String, Object> parameters = new HashMap<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append(" SELECT name, email, cpf, birth_date FROM tb_clients ");
+        sql.append(" WHERE 1=1 ");
+
+        if (isNotBlank(id)) {
+            sql.append(" AND id = :id ");
+            parameters.put("id", id);
+        }
+        if (isNotBlank(cpf)) {
+            sql.append(" AND cpf = :cpf ");
+            parameters.put("cpf", cpf);
+        }
+        if (isNotBlank(name)) {
+            sql.append(" AND name = :name ");
+            parameters.put("name", name);
+        }
+        if (isNotBlank(email)) {
+            sql.append(" AND email = :email ");
+            parameters.put("email", email);
+        }
+
+        sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");
+        sql.append(" LIMIT :limit OFFSET :offset ");
+
+        Query query = em.createNativeQuery(sql.toString())
+                .setParameter("limit", linesPerPage)
+                .setParameter("offset", page * linesPerPage);
+
+        setQueryParameters(query, parameters);
+
+        List<Object[]> resultList = query.getResultList();
+        List<ClientDto> clientDtoList = new ArrayList<>();
+
+        for (Object[] result : resultList) {
+            ClientDto clientDto = new ClientDto();
+
+            clientDto.setName((String) result[0]);
+            clientDto.setEmail((String) result[1]);
+            clientDto.setCpf((String) result[2]);
+            clientDto.setBirth(((Date) result[3]).toLocalDate());
+
+            clientDtoList.add(clientDto);
+        }
+
+        return clientDtoList;
     }
 }

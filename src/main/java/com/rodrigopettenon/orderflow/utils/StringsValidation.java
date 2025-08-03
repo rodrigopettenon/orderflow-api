@@ -29,9 +29,9 @@ public class StringsValidation {
         return leftPad(removeNonNumericCharacters(cpf), 11, '0');
     }
 
-    public static String removeNonNumericCharacters(String texto){
-        if(isNotBlank(texto)){
-            return texto.replaceAll("[^\\d]", "");
+    public static String removeNonNumericCharacters(String text){
+        if(isNotBlank(text)){
+            return text.replaceAll("[^\\d]", "");
         }
         return null;
     }
@@ -82,6 +82,15 @@ public class StringsValidation {
 
     public static boolean isAlphanumeric(String sku) {
         return sku != null && sku.matches("^[a-zA-Z0-9]+$");
+    }
+
+    public static String removeNumbersAndSymbols(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        // Regex: Remove tudo que NÃO é letra, acento completo ou espaço
+        return input.replaceAll("[^a-zA-ZáéíóúÁÉÍÓÚàÀâêîôûÂÊÎÔÛãõÃÕäëïöüÄËÏÖÜçÇ\\s]", "");
     }
 
 }

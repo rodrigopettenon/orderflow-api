@@ -178,6 +178,8 @@ public class OrderService{
                 validatedStatus, fixedPage, fixedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
+
+
     private void validateMinOrderAndMaxOrderFilter(Integer minOrder, Integer maxOrder) {
         logMinOrderFilterValidation(minOrder);
         logMaxOrderFilterValidation(maxOrder);
