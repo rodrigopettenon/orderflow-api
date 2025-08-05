@@ -92,8 +92,8 @@ http://localhost:8080
   **Parâmetros:** `name`, `email`, `cpf`, `birthStart`, `birthEnd`, `page`, `linesPerPage`, `direction`, `orderBy`
 
 - **GET** `/search-by-identifier`  
-  Busca cliente de forma flexível por ID, nome, e-mail ou CPF.  
-  **Parâmetros:** `identifier`, `page`, `linesPerPage`, `direction`, `orderBy`
+  Busca cliente de forma flexível por qualquer identificador (ID, nome, e-mail ou CPF) com parâmetro opcional de faixa etária.  
+  **Parâmetros:** `identifier`, `minAge`, `maxAge`, `page`, `linesPerPage`, `direction`, `orderBy`
 
 - **PUT** `/update/{cpf}`  
   Atualiza os dados de um cliente com base no CPF.
