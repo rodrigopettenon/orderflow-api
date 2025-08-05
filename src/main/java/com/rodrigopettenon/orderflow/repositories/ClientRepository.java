@@ -446,12 +446,15 @@ public class ClientRepository {
     }
 
     public GlobalPageDto<ClientDto> findClientsByIdOrNameOrEmailOrCpf(String id, String cpf, String name,
-                                                                      String email, Integer page, Integer linesPerPage,
+                                                                      String email, LocalDate startBirthDate,
+                                                                      LocalDate endBirthDate,
+                                                                      LocalDate firstDayOfTheMaximumYearOfBirth,
+                                                                      Integer page, Integer linesPerPage,
                                                                       String direction, String orderBy) {
 
-        List<ClientDto> clientDtoList = queryFindClientsByIdOrNameOrEmailOrCpf(id, cpf, name, email, page,
-                linesPerPage, direction, orderBy);
-        Long total = queryCountClientsFoundByIdOrNameOrEmailOrCpf(id, cpf, name, email, page);
+        List<ClientDto> clientDtoList = queryFindClientsByIdOrNameOrEmailOrCpf(id, cpf, name, email, startBirthDate, endBirthDate, firstDayOfTheMaximumYearOfBirth,
+                page, linesPerPage, direction, orderBy);
+        Long total = queryCountClientsFoundByIdOrNameOrEmailOrCpf(id, cpf, name, email, startBirthDate, endBirthDate, firstDayOfTheMaximumYearOfBirth);
 
 
         GlobalPageDto<ClientDto> clientDtoPage = new GlobalPageDto<>();
@@ -461,7 +464,8 @@ public class ClientRepository {
         return clientDtoPage;
     }
 
-    private Long queryCountClientsFoundByIdOrNameOrEmailOrCpf(String id, String cpf, String name, String email, Integer page) {
+    private Long queryCountClientsFoundByIdOrNameOrEmailOrCpf(String id, String cpf, String name, String email,
+                                                              LocalDate startBirthDate, LocalDate endBirthDate, LocalDate firstDayOfTheMaximumYearOfBirth) {
         Map<String, Object> parameters = new HashMap<>();
         StringBuilder sql = new StringBuilder();
 
@@ -494,8 +498,10 @@ public class ClientRepository {
     }
 
     protected List<ClientDto> queryFindClientsByIdOrNameOrEmailOrCpf(String id, String cpf, String name,
-                                                                    String email, Integer page, Integer linesPerPage,
-                                                                    String direction, String orderBy) {
+                                                                     String email, LocalDate startBirthDate,
+                                                                     LocalDate endBirthDate, LocalDate firstDayOfTheMaximumYearOfBirth,
+                                                                     Integer page, Integer linesPerPage,
+                                                                     String direction, String orderBy) {
         Map<String, Object> parameters = new HashMap<>();
         StringBuilder sql = new StringBuilder();
         sql.append(" SELECT name, email, cpf, birth_date FROM tb_clients ");
@@ -516,6 +522,15 @@ public class ClientRepository {
         if (isNotBlank(email)) {
             sql.append(" AND email = :email ");
             parameters.put("email", email);
+        }
+        if (nonNull(startBirthDate)) {
+            sql.append(" AND birth_date <= :startBirthDate ");
+            parameters.put("startBirthDate", startBirthDate);
+        }
+        if (nonNull(endBirthDate)) {
+            sql.append(" AND birth_date BETWEEN :firstDayOfTheMaximumYearOfBirth AND :endBirthDate ");
+            parameters.put("endBirthDate", endBirthDate);
+            parameters.put("firstDayOfTheMaximumYearOfBirth", firstDayOfTheMaximumYearOfBirth);
         }
 
         sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction).append(" ");

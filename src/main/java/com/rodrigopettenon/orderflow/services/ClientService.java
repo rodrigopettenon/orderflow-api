@@ -5,6 +5,7 @@ import com.rodrigopettenon.orderflow.dtos.GlobalPageDto;
 import com.rodrigopettenon.orderflow.exceptions.ClientErrorException;
 import com.rodrigopettenon.orderflow.repositories.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -300,7 +301,8 @@ public class ClientService {
         }
     }
 
-    public GlobalPageDto<ClientDto> findClientByIdOrNameOrEmailOrCpf(String identifier, Integer page,
+    public GlobalPageDto<ClientDto> findClientByIdOrNameOrEmailOrCpf(String identifier, Integer minAge,
+                                                                     Integer maxAge, Integer page,
                                                                      Integer linesPerPage, String direction,
                                                                      String orderBy) {
         if (isBlank(identifier)) {
@@ -316,21 +318,59 @@ public class ClientService {
             return emptyGlobalPage();
         }
 
+        validateMinAgeAndMaxAge(minAge, maxAge);
+
+        LocalDate convertedMinAgeToBirthDate = convertMinimumAgeToBirthDate(minAge);
+        LocalDate convertedMaxAgeToBirthDate = convertMaximumAgeToBirthDate(maxAge);
+
+        LocalDate firstDayOfTheMaximumYearOfBirth = getFirstDayOfTheYearOfBirth(convertedMaxAgeToBirthDate);
+
+
         Integer sanitizedPage = sanitizePage(page);
         Integer sanitizedLinesPerPage = sanitizeLinesPerPage(linesPerPage);
         String fixedDirection = resolveDirectionOrDefault(direction);
         String fixedOrderBy = resolveOrderByOrDefault(orderBy);
 
         return clientRepository.findClientsByIdOrNameOrEmailOrCpf(id, cpf, name, email,
-                sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
+                convertedMinAgeToBirthDate ,convertedMaxAgeToBirthDate, firstDayOfTheMaximumYearOfBirth, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
-
 
     private GlobalPageDto<ClientDto> emptyGlobalPage() {
         GlobalPageDto<ClientDto> emptyGlobalPage = new GlobalPageDto<>();
         emptyGlobalPage.setItems(new ArrayList<>());
         emptyGlobalPage.setTotal(0L);
         return emptyGlobalPage;
+    }
+
+
+    private void validateMinAgeAndMaxAge(Integer minAge, Integer maxAge) {
+        if (nonNull(minAge) && nonNull(maxAge) && minAge > maxAge) {
+            throw new ClientErrorException("A idade mínima do cliente não pode ser maior que a idade máxima.");
+        }
+    }
+
+    private LocalDate getFirstDayOfTheYearOfBirth(LocalDate birthDate) {
+        if (isNull(birthDate)) {
+            return null;
+        }
+
+        return birthDate.withDayOfYear(1);
+    }
+
+    private LocalDate convertMinimumAgeToBirthDate(Integer minAge) {
+        if (isNull(minAge) || minAge < 0) {
+            return null;
+        }
+
+        return LocalDate.now().minusYears(minAge);
+    }
+
+    private LocalDate convertMaximumAgeToBirthDate(Integer maxAge) {
+        if (isNull(maxAge) || maxAge < 0) {
+            return null;
+        }
+
+        return LocalDate.now().minusYears(maxAge);
     }
 
     private String checkIfIsId(String identifier) {
