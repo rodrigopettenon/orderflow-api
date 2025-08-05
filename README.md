@@ -52,6 +52,7 @@ spring.datasource.password=sua_senha
 spring.jpa.hibernate.ddl-auto=none
 ```
 
+
 Observação: As tabelas devem ser criadas manualmente no banco de dados.
 
 
@@ -90,6 +91,10 @@ http://localhost:8080
   Busca clientes por filtros.  
   **Parâmetros:** `name`, `email`, `cpf`, `birthStart`, `birthEnd`, `page`, `linesPerPage`, `direction`, `orderBy`
 
+- **GET** `/search-by-identifier`  
+  Busca cliente de forma flexível por ID, nome, e-mail ou CPF.  
+  **Parâmetros:** `identifier`, `page`, `linesPerPage`, `direction`, `orderBy`
+
 - **PUT** `/update/{cpf}`  
   Atualiza os dados de um cliente com base no CPF.
 
@@ -125,21 +130,32 @@ http://localhost:8080
 #### Pedidos (`/orders`)
 
 - **POST** `/save`  
-  Cadastra um novo pedido.
+  Cadastra um novo pedido.  
+  **Body:** `OrderDto` (JSON com dados do pedido)
 
-- **GET** `/id?id={id}`  
-  Busca um pedido por ID.
+- **GET** `/id`  
+  Busca um pedido por ID.  
+  **Parâmetro:** `id` (UUID do pedido)
 
 - **GET** `/filter`  
-  Busca pedidos com base em filtros.  
+  Busca pedidos com filtros.  
   **Parâmetros:** `id`, `clientId`, `dateTimeStart`, `dateTimeEnd`, `status`, `page`, `linesPerPage`, `direction`, `orderBy`
 
 - **GET** `/details`  
   Busca pedidos com detalhes (quantidade mínima/máxima de itens, status etc).  
   **Parâmetros:** `orderId`, `clientId`, `dateTimeStart`, `dateTimeEnd`, `minQuantity`, `maxQuantity`, `status`, `page`, `linesPerPage`, `direction`, `orderBy`
 
-- **PUT** `/update?id={id}&status={status}`  
-  Atualiza o status de um pedido pelo ID.
+- **GET** `/relevant-data`  
+  Busca dados relevantes de pedidos.  
+  **Parâmetros:** `clientId`, `dateTimeStart`, `dateTimeEnd`, `status`, `page`, `linesPerPage`, `direction`, `orderBy`
+
+- **GET** `/client-sales-report`  
+  Gera relatório de vendas por cliente.  
+  **Parâmetros:** `dateTimeStart`, `dateTimeEnd`, `minOrder`, `maxOrder`, `status`, `page`, `linesPerPage`, `direction`, `orderBy`
+
+- **PUT** `/update`  
+  Atualiza o status de um pedido.  
+  **Parâmetros:** `id` (UUID do pedido), `status` (novo status)
 
 ---
 
@@ -155,6 +171,7 @@ http://localhost:8080
 - **GET** `/full-details`  
   Busca itens de pedido com detalhes (cliente, pedido, produto etc).  
   **Parâmetros:** `itemOrderId`, `productId`, `orderId`, `clientId`, `page`, `linesPerPage`, `direction`, `orderBy`
+
 ---
 
 ## Arquitetura e Boas Práticas
@@ -164,11 +181,10 @@ http://localhost:8080
 - Validações manuais aplicadas nos serviços, com mensagens de erro personalizadas
 - Implementação de filtros dinâmicos, paginação e ordenação
 - Tratamento global de exceções através de um Global Exception Handler
-
+- Cobertura completa de testes unitários em todos os métodos das camadas Service e Repository
 ---
 
 ### Melhorias Futuras
-- Conclusão dos testes unitários e dos testes de integração 
 - Documentação interativa com Swagger/OpenAPI
 - Autenticação e controle de acesso (JWT ou OAuth2)
 - Relatórios e exportação de dados
