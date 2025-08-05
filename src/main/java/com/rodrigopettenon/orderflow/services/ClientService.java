@@ -321,9 +321,10 @@ public class ClientService {
         validateMinAgeAndMaxAge(minAge, maxAge);
 
         LocalDate convertedMinAgeToBirthDate = convertMinimumAgeToBirthDate(minAge);
-        LocalDate convertedMaxAgeToBirthDate = convertMaximumAgeToBirthDate(maxAge);
 
-        LocalDate firstDayOfTheMaximumYearOfBirth = getFirstDayOfTheYearOfBirth(convertedMaxAgeToBirthDate);
+        LocalDate firstDayOfTheMaximumYearOfBirth = convertMaximumAgeToBirthDateAndReturnFirstDayOfThatYear(maxAge);
+
+        LocalDate currentDate = LocalDate.now();
 
 
         Integer sanitizedPage = sanitizePage(page);
@@ -331,8 +332,10 @@ public class ClientService {
         String fixedDirection = resolveDirectionOrDefault(direction);
         String fixedOrderBy = resolveOrderByOrDefault(orderBy);
 
+
         return clientRepository.findClientsByIdOrNameOrEmailOrCpf(id, cpf, name, email,
-                convertedMinAgeToBirthDate ,convertedMaxAgeToBirthDate, firstDayOfTheMaximumYearOfBirth, sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
+                convertedMinAgeToBirthDate, currentDate, firstDayOfTheMaximumYearOfBirth,
+                sanitizedPage, sanitizedLinesPerPage, fixedDirection, fixedOrderBy);
     }
 
     private GlobalPageDto<ClientDto> emptyGlobalPage() {
@@ -349,14 +352,6 @@ public class ClientService {
         }
     }
 
-    private LocalDate getFirstDayOfTheYearOfBirth(LocalDate birthDate) {
-        if (isNull(birthDate)) {
-            return null;
-        }
-
-        return birthDate.withDayOfYear(1);
-    }
-
     private LocalDate convertMinimumAgeToBirthDate(Integer minAge) {
         if (isNull(minAge) || minAge < 0) {
             return null;
@@ -365,12 +360,14 @@ public class ClientService {
         return LocalDate.now().minusYears(minAge);
     }
 
-    private LocalDate convertMaximumAgeToBirthDate(Integer maxAge) {
+    private LocalDate convertMaximumAgeToBirthDateAndReturnFirstDayOfThatYear(Integer maxAge) {
         if (isNull(maxAge) || maxAge < 0) {
             return null;
         }
 
-        return LocalDate.now().minusYears(maxAge);
+        LocalDate convertedMaxAgeToBirthDate = LocalDate.now().minusYears(maxAge);
+
+        return convertedMaxAgeToBirthDate.withDayOfYear(1);
     }
 
     private String checkIfIsId(String identifier) {
